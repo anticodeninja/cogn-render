@@ -12,17 +12,21 @@ function init() {
     //gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
     //var point = [gl.canvas.width, gl.canvas.height];
-    var point = [590, 00];
+    var point = [
+        300, 300,
+        450, 150
+    ];
     var angle = Math.atan2(point[1], point[0]);
-    var angle2 = Math.atan2(point[0], point[1]);
-    var length = Math.sqrt(Math.pow(point[0], 2) + Math.pow(point[1], 2));
-    var thickness = 10;
+    var angle2 = Math.atan2(point[3]-point[1], point[2]-point[0]);
+    var length = Math.sqrt(Math.pow(point[1], 2) + Math.pow(point[0], 2));
+    var length2 = Math.sqrt(Math.pow(point[3] - point[1], 2) + Math.pow(point[2]-point[0], 2)) + length;
+    var thickness = 3;
     var pattern = 50;
     var space = 10;
     var antialias = 2;
-    
-    var mesh = GL.Mesh.load({
-        vertices: [
+
+    var buffers = {
+        a_vertex: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
             0, 0, 0,
             point[0], point[1], 0,
             point[0], point[1], 0,
@@ -31,32 +35,51 @@ function init() {
             point[0], point[1], 0,
             0, 0, 0,
 
-            0, 0, 0,
-            point[1], point[0], 0,
-            point[1], point[0], 0,
+            point[0], point[1], 0,
+            point[2], point[3], 0,
+            point[2], point[3], 0,
                    
-            0, 0, 0,
-            point[1], point[0], 0,
-             0, 0, 0
-        ],
-        extra4: [
-            angle - Math.PI * 3 / 4, 0, 0, thickness,
-            angle - Math.PI * 1 / 4, 0, length, thickness,
-            angle + Math.PI * 1 / 4, 0, length, -thickness,
+            point[0], point[1], 0,
+            point[2], point[3], 0,
+            point[0], point[1], 0
+        ]), 3, gl.STATIC_DRAW),
+        
+        a_angle: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
+            angle - Math.PI * 3 / 4,
+            angle - Math.PI * 1 / 4,
+            angle + Math.PI * 1 / 4,
             
-            angle - Math.PI * 3 / 4, 0, 0, thickness,
-            angle + Math.PI * 1 / 4, 0, length, -thickness,
-            angle + Math.PI * 3 / 4, 0, 0, -thickness,
+            angle - Math.PI * 3 / 4,
+            angle + Math.PI * 1 / 4,
+            angle + Math.PI * 3 / 4,
 
-            angle2 - Math.PI * 3 / 4, 1, 0, thickness,
-            angle2 - Math.PI * 1 / 4, 1, length, thickness,
-            angle2 + Math.PI * 1 / 4, 1, length, -thickness,
+            angle2 - Math.PI * 3 / 4,
+            angle2 - Math.PI * 1 / 4,
+            angle2 + Math.PI * 1 / 4,
             
-            angle2 - Math.PI * 3 / 4, 1, 0, thickness,
-            angle2 + Math.PI * 1 / 4, 1, length, -thickness,
-            angle2 + Math.PI * 3 / 4, 1, 0, -thickness
-        ]
-    });
+            angle2 - Math.PI * 3 / 4,
+            angle2 + Math.PI * 1 / 4,
+            angle2 + Math.PI * 3 / 4
+        ]), 1, gl.STATIC_DRAW),
+        
+        a_pos: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
+            0, thickness,
+            length, thickness,
+            length, -thickness,
+            
+            0, thickness,
+            length, -thickness,
+            0, -thickness,
+
+            length, thickness,
+            length2, thickness,
+            length2, -thickness,
+            
+            length, thickness,
+            length2, -thickness,
+            length, -thickness
+        ]), 2, gl.STATIC_DRAW)
+    };
 
     var cam_pos = [0, 0, gl.canvas.height / 2 / Math.tan(22.5 * DEG2RAD)];
     
@@ -98,17 +121,15 @@ function init() {
         mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
         mat4.multiply(mvp, persp, view);
 
-	//render mesh using the shader
-	if (mesh) {
-	    shader.uniforms({
-		u_mvp: mvp,
-                u_thickness: thickness,
-                u_antialias: antialias,
-                u_pattern: pattern,
-                u_space: space,
-                u_period: pattern + space,
-                u_aspect: [1 / gl.canvas.width, 1 / gl.canvas.height]
-	    }).draw(mesh, gl.TRIANGLES);
-        }
+
+	shader.uniforms({
+	    u_mvp: mvp,
+            u_thickness: thickness,
+            u_antialias: antialias,
+            u_pattern: pattern,
+            u_space: space,
+            u_period: pattern + space,
+            u_aspect: [2 / gl.canvas.width, 2 / gl.canvas.height]
+	}).drawBuffers(buffers, null, gl.TRIANGLES);
     };
 }

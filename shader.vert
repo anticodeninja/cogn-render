@@ -2,7 +2,7 @@ precision highp float;
 
 attribute vec3 a_vertex;
 attribute float a_angle;
-attribute vec2 a_pos;
+attribute vec2 a_position;
 
 uniform mat4 u_mvp;
 uniform float u_thickness;
@@ -14,14 +14,8 @@ varying vec2 v_pos;
 
 void main() {
     v_color = vec4(1.0, 1.0, 1.0, 1.0);
+    v_pos = a_position + vec2(0.0, u_antialias * sign(a_position.y));
     
-    gl_Position = u_mvp * vec4(a_vertex, 1.0);
-    gl_Position /= gl_Position.w;
-
     vec2 transform = vec2(cos(a_angle), sin(a_angle));
-
-    gl_Position.xy = gl_Position.xy + (u_thickness + u_antialias) * transform * u_aspect;
-    
-    v_pos.x = a_pos.x;
-    v_pos.y = a_pos.y + u_antialias * sign(a_pos.y);
+    gl_Position = vec4(a_vertex.xy + (u_thickness + u_antialias) * transform * u_aspect, a_vertex.z, 1.0);
 }

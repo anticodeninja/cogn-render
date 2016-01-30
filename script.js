@@ -1,3 +1,5 @@
+var viewPortAspect = vec2.create();
+
 function init() {
     //create the rendering context
     var container = document.body;
@@ -9,77 +11,6 @@ function init() {
     });
     container.appendChild(gl.canvas);
     gl.animate();
-    //gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-
-    //var point = [gl.canvas.width, gl.canvas.height];
-    var point = [
-        300, 300,
-        450, 150
-    ];
-    var angle = Math.atan2(point[1], point[0]);
-    var angle2 = Math.atan2(point[3]-point[1], point[2]-point[0]);
-    var length = Math.sqrt(Math.pow(point[1], 2) + Math.pow(point[0], 2));
-    var length2 = Math.sqrt(Math.pow(point[3] - point[1], 2) + Math.pow(point[2]-point[0], 2)) + length;
-    var thickness = 3;
-    var pattern = 50;
-    var space = 10;
-    var antialias = 2;
-
-    var buffers = {
-        a_vertex: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
-            0, 0, 0,
-            point[0], point[1], 0,
-            point[0], point[1], 0,
-                   
-            0, 0, 0,
-            point[0], point[1], 0,
-            0, 0, 0,
-
-            point[0], point[1], 0,
-            point[2], point[3], 0,
-            point[2], point[3], 0,
-                   
-            point[0], point[1], 0,
-            point[2], point[3], 0,
-            point[0], point[1], 0
-        ]), 3, gl.STATIC_DRAW),
-        
-        a_angle: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
-            angle - Math.PI * 3 / 4,
-            angle - Math.PI * 1 / 4,
-            angle + Math.PI * 1 / 4,
-            
-            angle - Math.PI * 3 / 4,
-            angle + Math.PI * 1 / 4,
-            angle + Math.PI * 3 / 4,
-
-            angle2 - Math.PI * 3 / 4,
-            angle2 - Math.PI * 1 / 4,
-            angle2 + Math.PI * 1 / 4,
-            
-            angle2 - Math.PI * 3 / 4,
-            angle2 + Math.PI * 1 / 4,
-            angle2 + Math.PI * 3 / 4
-        ]), 1, gl.STATIC_DRAW),
-        
-        a_pos: new GL.Buffer(gl.ARRAY_BUFFER, new Float32Array([
-            0, thickness,
-            length, thickness,
-            length, -thickness,
-            
-            0, thickness,
-            length, -thickness,
-            0, -thickness,
-
-            length, thickness,
-            length2, thickness,
-            length2, -thickness,
-            
-            length, thickness,
-            length2, -thickness,
-            length, -thickness
-        ]), 2, gl.STATIC_DRAW)
-    };
 
     var cam_pos = [0, 0, gl.canvas.height / 2 / Math.tan(22.5 * DEG2RAD)];
     
@@ -88,22 +19,41 @@ function init() {
     var mvp = mat4.create();
 
     var cam_angle = 0.0;
+    var need_update = true;
+    
     //get mouse actions
     gl.captureMouse();
     gl.onmousemove = function(e) {
 	if (e.dragging) {
-            cam_pos[0] -= e.deltax;
-	    cam_pos[1] += e.deltay;
+            need_update = true;
+            if (e.ctrlKey) {
+                mat4.rotateY(view, view, e.deltax * 0.01);
+                mat4.rotateX(view, view, e.deltay * 0.01);
+            } else {
+                cam_pos[0] -= e.deltax;
+	        cam_pos[1] += e.deltay;
+                mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
+            }
 	}
     }
 
+    var lineMesh = new LineMesh();
+    lineMesh.addPoint(0, 150, 0);
+    lineMesh.addPoint(50, 200, 0);
+    lineMesh.addPoint(100, 200, 0);
+    lineMesh.addPoint(150, 150, 0);
+    lineMesh.addPoint(150, 100, 0);
+    lineMesh.addPoint(0, -100, 0);
+    lineMesh.addPoint(-150, 100, 0);
+    lineMesh.addPoint(-150, 150, 0);
+    lineMesh.addPoint(-100, 200, 0);
+    lineMesh.addPoint(-50, 200, 0);
+    lineMesh.addPoint(0, 150, 0);
+
     //set the camera position
     mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0, 1000);
-    //mat4.ortho(persp, 0, gl.canvas.width, 0, gl.canvas.height, 0, 10000);
-    //mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], cam_pos[2]], [0, 1, 0]);
-
-    //basic phong shader
-    var shader = Shader.fromURL("shader.vert", "shader.frag");
+    mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
+    vec2.set(viewPortAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
 
     //generic gl flags and settings
     //gl.clearColor(0.1, 0.1, 0.1, 1);
@@ -115,21 +65,13 @@ function init() {
     //rendering loop
     gl.ondraw = function() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-	//create modelview and projection matrices
-        //mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
-        mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
-        mat4.multiply(mvp, persp, view);
-
-
-	shader.uniforms({
-	    u_mvp: mvp,
-            u_thickness: thickness,
-            u_antialias: antialias,
-            u_pattern: pattern,
-            u_space: space,
-            u_period: pattern + space,
-            u_aspect: [2 / gl.canvas.width, 2 / gl.canvas.height]
-	}).drawBuffers(buffers, null, gl.TRIANGLES);
+        
+        if (need_update) {
+            mat4.multiply(mvp, persp, view);
+            need_update = false;
+            lineMesh.transform(mvp);
+        }
+        
+        lineMesh.draw(gl, persp);
     };
 }

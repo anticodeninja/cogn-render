@@ -50,16 +50,20 @@ function init() {
     lineMesh.addPoint(-50, 200, 0);
     lineMesh.addPoint(0, 150, 0);
 
+    var pointMesh = new PointMesh();
+    pointMesh.addPoint(0, 0, -100, 50);
+    pointMesh.addPoint(300, 0, 0, 5);
+    pointMesh.addPoint(0, 300, 0, 10);
+
     //set the camera position
     mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0, 1000);
     mat4.lookAt(view, cam_pos, [cam_pos[0], cam_pos[1], 0], [0, 1, 0]);
     vec2.set(viewPortAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
 
     //generic gl flags and settings
-    //gl.clearColor(0.1, 0.1, 0.1, 1);
-    gl.clearColor(0, 0, 0, 1);
-    gl.disable(gl.DEPTH_TEST);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.clearColor(0.5, 0.1, 0.1, 1);
+    //gl.disable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.enable(gl.BLEND);
 
     //rendering loop
@@ -70,8 +74,10 @@ function init() {
             mat4.multiply(mvp, persp, view);
             need_update = false;
             lineMesh.transform(mvp);
+            pointMesh.transform(mvp);
         }
         
-        lineMesh.draw(gl, persp);
+        lineMesh.draw(gl);
+        pointMesh.draw(gl);
     };
 }

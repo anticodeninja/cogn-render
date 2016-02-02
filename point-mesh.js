@@ -87,8 +87,11 @@ PointMesh.prototype.upload = function() {
     this.buffers.a_position.upload();
 }
 
-PointMesh.prototype.draw = function(gl) {
+PointMesh.prototype.draw = function(gl, step) {
     this.shader.uniforms({
+        u_step: step,
+        u_texture: 0,
+        u_depth: 1,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
         u_aspect: viewPortAspect

@@ -6,23 +6,26 @@ PointMesh = function() {
     this.pointsOrig = [];
     this.pointsTrans = [];
     this.radius = [];
+    this.ids = [];
     
     this.data = {
         vertexes: null,
         angles: null,
-        positions: null
+        positions: null,
+        id: null
     };
 
     this.buffers = {
         a_vertex: null,
         a_angle: null,
-        a_position: null
+        a_position: null,
+        a_id: null
     };
 
     this.shader = Shader.fromURL("point.vert", "point.frag");
 }
 
-PointMesh.prototype.addPoint = function(x, y, z, r)
+PointMesh.prototype.addPoint = function(x, y, z, options)
 {
     var p = vec3.create();
     vec3.set(p, x, y, z);
@@ -30,7 +33,9 @@ PointMesh.prototype.addPoint = function(x, y, z, r)
     this.length += 1;
     this.pointsOrig.push(p);
     this.pointsTrans.push(vec3.create());
-    this.radius.push(r);
+    
+    this.radius.push(options.r || 1.0);
+    this.ids.push(idToColor(options.id || 0));
 }
 
 PointMesh.prototype.transform = function(mat)
@@ -45,7 +50,7 @@ PointMesh.prototype.transform = function(mat)
 }
 
 PointMesh.prototype.upload = function() {
-    var i, j, right, top, radius, point;
+    var i, j, right, top, radius, point, id;
 
     vertex = 6 * this.length;
     
@@ -64,6 +69,11 @@ PointMesh.prototype.upload = function() {
         this.buffers.a_position = new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
     }
 
+    if (this.data.id == null || (this.data.id.length !== 4 * vertex)) {
+        this.data.id = new Float32Array(4 * vertex);
+        this.buffers.a_id = new GL.Buffer(gl.ARRAY_BUFFER, this.data.id, 4, gl.DYNAMIC_DRAW);
+    }
+
     for (i = 0; i < this.length; ++i) {
         for (j = 0; j < 6; ++j) {
             top = j == 2 || j == 4 || j == 5;
@@ -79,12 +89,19 @@ PointMesh.prototype.upload = function() {
             radius = this.radius[i];
             this.data.positions[6*2*i + 2*j + 0] = right ? radius : -radius;
             this.data.positions[6*2*i + 2*j + 1] = top ? -radius : radius;
+
+            id = this.ids[i];
+            this.data.id[6*4*i + 4*j + 0] = id[0];
+            this.data.id[6*4*i + 4*j + 1] = id[1];
+            this.data.id[6*4*i + 4*j + 2] = id[2];
+            this.data.id[6*4*i + 4*j + 3] = id[3];
         }
     }
 
     this.buffers.a_vertex.upload();
     this.buffers.a_angle.upload();
     this.buffers.a_position.upload();
+    this.buffers.a_id.upload();
 }
 
 PointMesh.prototype.draw = function(gl, step) {

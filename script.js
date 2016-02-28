@@ -1,5 +1,7 @@
 var viewPortAspect = vec2.create();
 
+
+
 function init() {
     //create the rendering context
     var container = document.body;
@@ -13,24 +15,33 @@ function init() {
     gl.animate();
 
     var type = gl.UNSIGNED_BYTE;
-    var texture_color1 = new GL.Texture(
+    var textureColorOpaque = new GL.Texture(
         container.offsetWidth,
         container.offsetHeight,
         { type: type, filter: gl.NEAREST });
-    var texture_depth1 = new GL.Texture(
+    var textureDepthOpaque = new GL.Texture(
         container.offsetWidth,
         container.offsetHeight,
         { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST });
-    var texture_color2 = new GL.Texture(
+    var textureColorTransparent = new GL.Texture(
         container.offsetWidth,
         container.offsetHeight,
         { type: type, filter: gl.NEAREST });
-    var texture_depth2 = new GL.Texture(
+    var textureDepthTransparent = new GL.Texture(
         container.offsetWidth,
         container.offsetHeight,
         { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.NEAREST });
-    var fbo1 = new GL.FBO([texture_color1], texture_depth1);
-    var fbo2 = new GL.FBO([texture_color2], texture_depth2);
+    var textureColorId = new GL.Texture(
+        container.offsetWidth,
+        container.offsetHeight,
+        { type: gl.UNSIGNED_BYTE, filter: gl.NEAREST });
+    var textureDepthId = new GL.Texture(
+        container.offsetWidth,
+        container.offsetHeight,
+        { format: gl.DEPTH_COMPONENT, type: gl.UNSIGNED_INT, filter: gl.LINEAR });
+    var fboOpaque = new GL.FBO([textureColorOpaque], textureDepthOpaque);
+    var fboTransparent = new GL.FBO([textureColorTransparent], textureDepthTransparent);
+    var fboId = new GL.FBO([textureColorId], textureDepthId);
 
     var shader = Shader.fromURL("merge.vert", "merge.frag");
 
@@ -58,6 +69,15 @@ function init() {
             }
 	}
     }
+    gl.onmousedown = function(e) {
+        var color = new Uint8Array(4);
+        
+        fboId.bind(true);
+        gl.readPixels(e.canvasx, e.canvasy, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, color);
+        fboId.unbind();
+        
+        console.log(colorToId(color));
+    }
 
     var lineMesh = new LineMesh();
     lineMesh.addPoint(0, 150, 0);
@@ -73,9 +93,9 @@ function init() {
     lineMesh.addPoint(0, 150, 0);
 
     var pointMesh = new PointMesh();
-    pointMesh.addPoint(0, 0, 100, 50);
-    pointMesh.addPoint(300, 0, 0, 5);
-    pointMesh.addPoint(0, 300, 0, 10);
+    pointMesh.addPoint(0, 0, 100, {r: 50, id: 100});
+    pointMesh.addPoint(300, 0, 0, {r: 5, id: 12345678});
+    pointMesh.addPoint(0, 300, 0, {r: 10, id: 3});
 
     //set the camera position
     mat4.perspective(persp, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, -500, 500);
@@ -99,29 +119,35 @@ function init() {
         gl.enable(gl.DEPTH_TEST);
         gl.disable(gl.BLEND);
         
-        fbo1.bind(true);
+        fboOpaque.bind(true);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         lineMesh.draw(gl, 1);
         pointMesh.draw(gl, 1);
-        fbo1.unbind();
+        fboOpaque.unbind();
 
-        fbo2.bind(true);
+        fboTransparent.bind(true);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         lineMesh.draw(gl, 2);
         pointMesh.draw(gl, 2);
-        fbo2.unbind();
+        fboTransparent.unbind();
+
+        fboId.bind(true);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        lineMesh.draw(gl, 3);
+        pointMesh.draw(gl, 3);
+        fboId.unbind();
 
         var quad = GL.Mesh.getScreenQuad();
 
         gl.clearColor(0.5, 0.1, 0.1, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clear(gl.COLOR_BUFFER_BIT);
         gl.disable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
         
-        texture_color1.bind(0);
-        texture_depth1.bind(1);
-        texture_color2.bind(2);
-        texture_depth2.bind(3);
+        textureColorOpaque.bind(0);
+        textureDepthOpaque.bind(1);
+        textureColorTransparent.bind(2);
+        textureDepthTransparent.bind(3);
 
         shader.uniforms({
             u_color_texture1: 0,
@@ -135,5 +161,6 @@ function init() {
 	// gl.drawTexture(texture_depth1, gl.canvas.width * 0.5, 0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
         // gl.drawTexture(texture_color2, 0, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
 	// gl.drawTexture(texture_depth2, gl.canvas.width * 0.5, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+        gl.drawTexture(textureColorId, 0,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
     };
 }

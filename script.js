@@ -51,6 +51,8 @@ function init() {
     var view = mat4.create();
     var mvp = mat4.create();
 
+    var animation = true;
+
     var cam_angle = 0.0;
     var need_update = true;
     
@@ -58,7 +60,9 @@ function init() {
     gl.captureMouse();
     gl.onmousemove = function(e) {
 	if (e.dragging) {
+            animation = false;
             need_update = true;
+            
             if (e.ctrlKey) {
                 cam_pos[0] -= e.deltax;
 	        cam_pos[1] += e.deltay;
@@ -105,6 +109,14 @@ function init() {
     //generic gl flags and settings
     gl.depthFunc(gl.LESS);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    gl.onupdate = function(dt)
+    {
+        if (animation) {
+            mat4.rotateY(view, view, dt * 0.4);
+            need_update = true;
+        }
+    };
 
     //rendering loop
     gl.ondraw = function() {

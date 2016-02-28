@@ -25,6 +25,8 @@ PointMesh = function() {
     this.shader = Shader.fromURL("point.vert", "point.frag");
 }
 
+PointMesh.prototype = Object.create(BaseMesh.prototype);
+
 PointMesh.prototype.addPoint = function(x, y, z, options)
 {
     var p = vec3.create();
@@ -36,6 +38,8 @@ PointMesh.prototype.addPoint = function(x, y, z, options)
     
     this.radius.push(options.r || 1.0);
     this.ids.push(idToColor(options.id || 0));
+
+    return this;
 }
 
 PointMesh.prototype.transform = function(mat)
@@ -104,13 +108,13 @@ PointMesh.prototype.upload = function() {
     this.buffers.a_id.upload();
 }
 
-PointMesh.prototype.draw = function(gl, step) {
+PointMesh.prototype.draw = function(step) {
     this.shader.uniforms({
         u_step: step,
         u_texture: 0,
         u_depth: 1,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
-        u_aspect: viewPortAspect
+        u_aspect: this.scene.cameraAspect
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }

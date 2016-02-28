@@ -25,6 +25,8 @@ LineMesh = function() {
     this.shader = Shader.fromURL("line.vert", "line.frag");
 }
 
+LineMesh.prototype = Object.create(BaseMesh.prototype);
+
 LineMesh.prototype.addPoint = function(x, y, z)
 {
     var p = vec3.create();
@@ -35,6 +37,8 @@ LineMesh.prototype.addPoint = function(x, y, z)
     this.pointsTrans.push(vec3.create());
     this.anglesTrans.push(0);
     this.lengthsTrans.push(0);
+
+    return this;
 }
 
 LineMesh.prototype.transform = function(mat)
@@ -52,8 +56,8 @@ LineMesh.prototype.transform = function(mat)
     this.lengthsTrans[0] = 0.0;
     for (i = 0; i < this.length-1; ++i) {
         vec2.set(temp,
-                 (this.pointsTrans[i+1][0] - this.pointsTrans[i][0]) / viewPortAspect[0],
-                 (this.pointsTrans[i+1][1] - this.pointsTrans[i][1]) / viewPortAspect[1]);
+                 (this.pointsTrans[i+1][0] - this.pointsTrans[i][0]) / this.scene.cameraAspect[0],
+                 (this.pointsTrans[i+1][1] - this.pointsTrans[i][1]) / this.scene.cameraAspect[1]);
         this.lengthsTrans[i+1] = this.lengthsTrans[i] + Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
         this.anglesTrans[i] = Math.atan2(temp[1], temp[0]);
     }
@@ -105,7 +109,7 @@ LineMesh.prototype.upload = function() {
     this.buffers.a_position.upload();
 }
 
-LineMesh.prototype.draw = function(gl, step) {
+LineMesh.prototype.draw = function(step) {
     this.shader.uniforms({
         u_step: step,
         u_texture: 0,
@@ -115,6 +119,6 @@ LineMesh.prototype.draw = function(gl, step) {
         u_pattern: this.pattern,
         u_space: this.space,
         u_period: this.pattern + this.space,
-        u_aspect: viewPortAspect
+        u_aspect: this.scene.cameraAspect,
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }

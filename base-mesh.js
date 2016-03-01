@@ -1,6 +1,10 @@
 BaseMesh = function() {
     this.scene = null;
-    this.modelMat = mat4.create();
+    this.mvp = mat4.create();
+}
+
+BaseMesh.prototype.transform = function(mvp) {
+    mat4.copy(this.mvp, mvp);
 }
 
 BaseMesh.prototype.setScene = function(scene) {

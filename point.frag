@@ -22,7 +22,7 @@ void main() {
         discard;
     }
 
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = v_color;
 
     if (length2 > full_radius * full_radius) {
         gl_FragColor.a = 1.0 - smoothstep(full_radius, full_radius + u_antialias, sqrt(length2));
@@ -37,7 +37,7 @@ void main() {
         gl_FragColor = v_id;
         return;
     }
-    
+
     if (length2 > reduced_radius * reduced_radius) {
         gl_FragColor.rgb *= 1.0 - smoothstep(reduced_radius, v_radius, sqrt(length2));
     }

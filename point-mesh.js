@@ -1,10 +1,11 @@
 PointMesh = function() {
+    this.constructor.prototype.constructor();
+    
     this.thickness = 3;
     this.antialias = 2;
 
     this.length = 0;
-    this.pointsOrig = [];
-    this.pointsTrans = [];
+    this.points = [];
     this.radius = [];
     this.ids = [];
     
@@ -33,24 +34,11 @@ PointMesh.prototype.addPoint = function(x, y, z, options)
     vec3.set(p, x, y, z);
 
     this.length += 1;
-    this.pointsOrig.push(p);
-    this.pointsTrans.push(vec3.create());
-    
+    this.points.push(p);
     this.radius.push(options.r || 1.0);
     this.ids.push(idToColor(options.id || 0));
 
     return this;
-}
-
-PointMesh.prototype.transform = function(mat)
-{
-    var i;
-
-    for (i = 0; i < this.length; ++i) {
-        vec3.transformMat4(this.pointsTrans[i], this.pointsOrig[i], mat);
-    }
-
-    this.upload();    
 }
 
 PointMesh.prototype.upload = function() {
@@ -83,7 +71,7 @@ PointMesh.prototype.upload = function() {
             top = j == 2 || j == 4 || j == 5;
             right = j == 1 || j == 2 || j == 4;
             
-            point = this.pointsTrans[i];
+            point = this.points[i];
             this.data.vertex[6*3*i + 3*j + 0] = point[0];
             this.data.vertex[6*3*i + 3*j + 1] = point[1];
             this.data.vertex[6*3*i + 3*j + 2] = point[2];
@@ -110,6 +98,7 @@ PointMesh.prototype.upload = function() {
 
 PointMesh.prototype.draw = function(step) {
     this.shader.uniforms({
+        u_mvp: this.mvp,
         u_step: step,
         u_texture: 0,
         u_depth: 1,

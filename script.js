@@ -46,7 +46,7 @@ function init() {
         console.log(scene.getObjectId(e.canvasx, e.canvasy));
     }
 
-    var lineMesh = new LineMesh()
+    new LineMesh()
         .addPoint(0, 150, 0)
         .addPoint(50, 200, 0)
         .addPoint(100, 200, 0)
@@ -60,7 +60,7 @@ function init() {
         .addPoint(0, 150, 0)
         .setScene(scene);
 
-    var pointMesh = new PointMesh()
+    new PointMesh()
         .addPoint(0, 0, 100, {r: 50, id: 100})
         .addPoint(300, 0, 0, {r: 5, id: 12345678})
         .addPoint(0, 300, 0, {r: 10, id: 3})

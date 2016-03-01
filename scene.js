@@ -6,14 +6,15 @@ Scene = function(gl) {
     this.cameraAspect = vec2.create();
     vec2.set(this.cameraAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
 
-    this.projMat = mat4.create();
-    mat4.perspective(this.projMat, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, -500, 500);
+    this.proj = mat4.create();
+    //mat4.perspective(this.proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, -500, 500);
+    mat4.perspective(this.proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
     
-    this.viewMat = mat4.create();
-    mat4.identity(this.viewMat);
+    this.view = mat4.create();
+    mat4.identity(this.view);
     
-    this.mvpMat = mat4.create();
-    this.tempMat = mat4.create();
+    this.mvp = mat4.create();
+    this.temp = mat4.create();
 
     this.textureColorOpaque = new GL.Texture(
         gl.canvas.width,
@@ -62,10 +63,11 @@ Scene.prototype.getObjectId = function(posX, posY) {
 
 Scene.prototype.addObject = function(obj) {
     this.objects.push(obj);
+    obj.upload();
 }
 
 Scene.prototype.setCamera = function(pos, dir, up) {
-    mat4.lookAt(this.viewMat, pos, dir, up);
+    mat4.lookAt(this.view, pos, dir, up);
 }
 
 Scene.prototype.invalidate = function() {
@@ -80,9 +82,9 @@ Scene.prototype.draw = function() {
 
     this.outdated = false;
     
-    mat4.multiply(this.mvpMat, this.projMat, this.viewMat);
+    mat4.multiply(this.mvp, this.proj, this.view);
     for (var i=0; i<this.objects.length; ++i) {
-        this.objects[i].transform(this.mvpMat);
+        this.objects[i].transform(this.mvp);
     }
 
     gl.clearColor(0.0, 0.0, 0.0, 0.0);

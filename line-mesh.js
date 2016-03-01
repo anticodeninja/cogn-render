@@ -1,14 +1,15 @@
 LineMesh = function() {
+    this.constructor.prototype.constructor();
+    
     this.thickness = 3;
     this.pattern = 50;
     this.space = 10;
     this.antialias = 2;
 
     this.length = 0;
-    this.pointsOrig = [];
-    this.pointsTrans = [];
-    this.anglesTrans = [];
-    this.lengthsTrans = [];
+    this.points = [];
+    this.angles = [];
+    this.lengths = [];
     
     this.data = {
         vertexes: null,
@@ -33,35 +34,40 @@ LineMesh.prototype.addPoint = function(x, y, z)
     vec3.set(p, x, y, z);
 
     this.length += 1;
-    this.pointsOrig.push(p);
-    this.pointsTrans.push(vec3.create());
-    this.anglesTrans.push(0);
-    this.lengthsTrans.push(0);
+    this.points.push(p);
+    this.angles.push(0);
+    this.lengths.push(0);
 
     return this;
 }
 
 LineMesh.prototype.transform = function(mat)
 {
-    var i, temp = vec2.create();
+    this.constructor.prototype.transform(mat);
+    var i,
+        prev = vec3.create(),
+        next = vec3.create(),
+        temp = vec2.create();
 
     if (this.length < 2) {
         throw ("number of points is not enough to draw line");
     }
 
-    for (i = 0; i < this.length; ++i) {
-        vec3.transformMat4(this.pointsTrans[i], this.pointsOrig[i], mat);
-    }
-
-    this.lengthsTrans[0] = 0.0;
-    for (i = 0; i < this.length-1; ++i) {
+    this.lengths[0] = 0.0;
+    this.angles[this.length - 1] = 0.0;
+    
+    vec3.transformMat4(prev, this.points[0], mat);
+    for (i = 1; i < this.length; ++i) {
+        vec3.transformMat4(next, this.points[i], mat);
         vec2.set(temp,
-                 (this.pointsTrans[i+1][0] - this.pointsTrans[i][0]) / this.scene.cameraAspect[0],
-                 (this.pointsTrans[i+1][1] - this.pointsTrans[i][1]) / this.scene.cameraAspect[1]);
-        this.lengthsTrans[i+1] = this.lengthsTrans[i] + Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
-        this.anglesTrans[i] = Math.atan2(temp[1], temp[0]);
+                 (next[0] - prev[0]) / this.scene.cameraAspect[0],
+                 (next[1] - prev[1]) / this.scene.cameraAspect[1]);
+        
+        this.lengths[i] = this.lengths[i - 1] + Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+        this.angles[i - 1] = Math.atan2(temp[1], temp[0]);
+        
+        vec3.copy(prev, next);
     }
-    this.anglesTrans[this.length - 1] = 0.0;
 
     this.upload();    
 }
@@ -91,15 +97,15 @@ LineMesh.prototype.upload = function() {
             top = j == 2 || j == 4 || j == 5;
             right = j == 1 || j == 2 || j == 4;
             
-            point = this.pointsTrans[right ? i + 1 : i];
+            point = this.points[right ? i + 1 : i];
             this.data.vertex[6*3*i + 3*j + 0] = point[0];
             this.data.vertex[6*3*i + 3*j + 1] = point[1];
             this.data.vertex[6*3*i + 3*j + 2] = point[2];
 
-            this.data.angles[6*i + j] = this.anglesTrans[i]
+            this.data.angles[6*i + j] = this.angles[i]
                 + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
 
-            this.data.positions[6*2*i + 2*j + 0] = this.lengthsTrans[right ? i + 1 : i];
+            this.data.positions[6*2*i + 2*j + 0] = this.lengths[right ? i + 1 : i];
             this.data.positions[6*2*i + 2*j + 1] = top ? -this.thickness : this.thickness;
         }
     }
@@ -111,6 +117,7 @@ LineMesh.prototype.upload = function() {
 
 LineMesh.prototype.draw = function(step) {
     this.shader.uniforms({
+        u_mvp: this.mvp,
         u_step: step,
         u_texture: 0,
         u_depth: 1,

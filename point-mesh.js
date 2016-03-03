@@ -28,10 +28,10 @@ PointMesh = function() {
 
 PointMesh.prototype = Object.create(BaseMesh.prototype);
 
-PointMesh.prototype.addPoint = function(x, y, z, options)
+PointMesh.prototype.addPoint = function(value, options)
 {
     var p = vec3.create();
-    vec3.set(p, x, y, z);
+    vec3.copy(p, value);
 
     this.length += 1;
     this.points.push(p);

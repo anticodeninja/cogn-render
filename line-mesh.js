@@ -28,10 +28,10 @@ LineMesh = function() {
 
 LineMesh.prototype = Object.create(BaseMesh.prototype);
 
-LineMesh.prototype.addPoint = function(x, y, z)
+LineMesh.prototype.addPoint = function(value)
 {
     var p = vec3.create();
-    vec3.set(p, x, y, z);
+    vec3.copy(p, value);
 
     this.length += 1;
     this.points.push(p);

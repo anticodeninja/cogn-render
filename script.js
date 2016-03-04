@@ -46,20 +46,6 @@ function init() {
         console.log(scene.getObjectId(e.canvasx, e.canvasy));
     }
 
-    new LineMesh()
-        .addPoint([0, 150, 0])
-        .addPoint([50, 200, 0])
-        .addPoint([100, 200, 0])
-        .addPoint([150, 150, 0])
-        .addPoint([150, 100, 0])
-        .addPoint([0, -100, 0])
-        .addPoint([-150, 100, 0])
-        .addPoint([-150, 150, 0])
-        .addPoint([-100, 200, 0])
-        .addPoint([-50, 200, 0])
-        .addPoint([0, 150, 0])
-        .setScene(scene);
-
     new PointMesh()
         .addPoint(simTrans.toPoint([1, 0, 0, 0]), {r: 10, id: 1})
         .addPoint(simTrans.toPoint([0, 1, 0, 0]), {r: 10, id: 1})
@@ -68,6 +54,9 @@ function init() {
         .addPoint([0, 0, 100], {r: 50, id: 100})
         .addPoint([300, 0, 0], {r: 5, id: 12345678})
         .addPoint([0, 300, 0], {r: 10, id: 3})
+        .setScene(scene);
+
+    new SimplexMesh(200)
         .setScene(scene);
 
     gl.onupdate = function(dt)

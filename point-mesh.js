@@ -30,11 +30,8 @@ PointMesh.prototype = Object.create(BaseMesh.prototype);
 
 PointMesh.prototype.addPoint = function(value, options)
 {
-    var p = vec3.create();
-    vec3.copy(p, value);
-
     this.length += 1;
-    this.points.push(p);
+    this.points.push(vec3.clone(value));
     this.radius.push(options.r || 1.0);
     this.ids.push(idToColor(options.id || 0));
 
@@ -46,9 +43,9 @@ PointMesh.prototype.upload = function() {
 
     vertex = 6 * this.length;
     
-    if (this.data.vertex == null || (this.data.vertex.length !== 3 * vertex)) {
-        this.data.vertex = new Float32Array(3 * vertex);
-        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertex, 3, gl.DYNAMIC_DRAW);
+    if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
+        this.data.vertexes = new Float32Array(3 * vertex);
+        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.angles == null || (this.data.angles.length !== vertex)) {
@@ -72,9 +69,9 @@ PointMesh.prototype.upload = function() {
             right = j == 1 || j == 2 || j == 4;
             
             point = this.points[i];
-            this.data.vertex[6*3*i + 3*j + 0] = point[0];
-            this.data.vertex[6*3*i + 3*j + 1] = point[1];
-            this.data.vertex[6*3*i + 3*j + 2] = point[2];
+            this.data.vertexes[6*3*i + 3*j + 0] = point[0];
+            this.data.vertexes[6*3*i + 3*j + 1] = point[1];
+            this.data.vertexes[6*3*i + 3*j + 2] = point[2];
 
             this.data.angles[6*i + j] = Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
 

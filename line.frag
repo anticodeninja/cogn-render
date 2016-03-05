@@ -7,7 +7,7 @@ uniform float u_pattern;
 uniform float u_space;
 uniform float u_period;
 
-varying vec3 v_color;
+varying vec4 v_color;
 varying vec2 v_pos;
 
 void main() {
@@ -16,7 +16,7 @@ void main() {
         discard;
     }
 
-    gl_FragColor = vec4(v_color, 1.0);
+    gl_FragColor = v_color;
 
     float koef_x = 1.0;
     if (modded > u_antialias && modded < (u_pattern - u_antialias)) {
@@ -29,7 +29,7 @@ void main() {
 
     float koef_y = 1.0 - smoothstep(u_thickness, u_thickness + u_antialias, abs(v_pos.y));
         
-    gl_FragColor.a = koef_x * koef_y;
+    gl_FragColor.a *= koef_x * koef_y;
 
     if (u_step == 1.0) {
         if (gl_FragColor.a < 1.0) discard;

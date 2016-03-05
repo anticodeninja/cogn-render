@@ -20,3 +20,16 @@ function colorToId(color) {
 
     return color[0] | color[1] << 8 | color[2] << 16;
 }
+
+function colorToArray(color) {
+    var res = new Float32Array(4);
+
+    res[0] = parseInt(color.substr(1, 2), 16) / 255;
+    res[1] = parseInt(color.substr(3, 2), 16) / 255;
+    res[2] = parseInt(color.substr(5, 2), 16) / 255;
+    res[3] = color.length > 7
+        ? parseInt(color.substring(7, 2), 16) / 255
+        : 1.0;
+
+    return res;
+}

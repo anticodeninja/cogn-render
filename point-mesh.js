@@ -1,11 +1,15 @@
-PointMesh = function() {
+PointMesh = function(options) {
     this.constructor.prototype.constructor();
-    
-    this.thickness = 3;
-    this.antialias = 2;
+
+    options = options || {};
+
+    this.borderColor = colorToArray(options.color || "#000000");
+    this.thickness = options.thickness || 1;
+    this.antialias = options.antialias || 2;
 
     this.length = 0;
     this.points = [];
+    this.colors = [];
     this.radius = [];
     this.ids = [];
     
@@ -13,13 +17,15 @@ PointMesh = function() {
         vertexes: null,
         angles: null,
         positions: null,
-        id: null
+        colors: null,
+        ids: null
     };
 
     this.buffers = {
         a_vertex: null,
         a_angle: null,
         a_position: null,
+        a_color: null,
         a_id: null
     };
 
@@ -30,16 +36,19 @@ PointMesh.prototype = Object.create(BaseMesh.prototype);
 
 PointMesh.prototype.addPoint = function(value, options)
 {
+    options = options || {};
+    
     this.length += 1;
     this.points.push(vec3.clone(value));
-    this.radius.push(options.r || 1.0);
+    this.radius.push(options.radius || 1.0);
+    this.colors.push(colorToArray(options.color || "#ffffff"));
     this.ids.push(idToColor(options.id || 0));
 
     return this;
 }
 
 PointMesh.prototype.upload = function() {
-    var i, j, right, top, radius, point, id;
+    var i, j, right, top, radius, point, color, id;
 
     vertex = 6 * this.length;
     
@@ -58,9 +67,14 @@ PointMesh.prototype.upload = function() {
         this.buffers.a_position = new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
     }
 
-    if (this.data.id == null || (this.data.id.length !== 4 * vertex)) {
-        this.data.id = new Float32Array(4 * vertex);
-        this.buffers.a_id = new GL.Buffer(gl.ARRAY_BUFFER, this.data.id, 4, gl.DYNAMIC_DRAW);
+    if (this.data.colors == null || (this.data.colors.length !== 4 * vertex)) {
+        this.data.colors = new Float32Array(4 * vertex);
+        this.buffers.a_color = new GL.Buffer(gl.ARRAY_BUFFER, this.data.colors, 4, gl.DYNAMIC_DRAW);
+    }
+
+    if (this.data.ids == null || (this.data.ids.length !== 4 * vertex)) {
+        this.data.ids = new Float32Array(4 * vertex);
+        this.buffers.a_id = new GL.Buffer(gl.ARRAY_BUFFER, this.data.ids, 4, gl.DYNAMIC_DRAW);
     }
 
     for (i = 0; i < this.length; ++i) {
@@ -79,17 +93,24 @@ PointMesh.prototype.upload = function() {
             this.data.positions[6*2*i + 2*j + 0] = right ? radius : -radius;
             this.data.positions[6*2*i + 2*j + 1] = top ? -radius : radius;
 
+            color = this.colors[i];
+            this.data.colors[6*4*i + 4*j + 0] = color[0];
+            this.data.colors[6*4*i + 4*j + 1] = color[1];
+            this.data.colors[6*4*i + 4*j + 2] = color[2];
+            this.data.colors[6*4*i + 4*j + 3] = color[3];
+
             id = this.ids[i];
-            this.data.id[6*4*i + 4*j + 0] = id[0];
-            this.data.id[6*4*i + 4*j + 1] = id[1];
-            this.data.id[6*4*i + 4*j + 2] = id[2];
-            this.data.id[6*4*i + 4*j + 3] = id[3];
+            this.data.ids[6*4*i + 4*j + 0] = id[0];
+            this.data.ids[6*4*i + 4*j + 1] = id[1];
+            this.data.ids[6*4*i + 4*j + 2] = id[2];
+            this.data.ids[6*4*i + 4*j + 3] = id[3];
         }
     }
 
     this.buffers.a_vertex.upload();
     this.buffers.a_angle.upload();
     this.buffers.a_position.upload();
+    this.buffers.a_color.upload();
     this.buffers.a_id.upload();
 }
 

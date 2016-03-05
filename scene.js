@@ -1,5 +1,10 @@
-Scene = function(gl) {
+Scene = function(gl, options) {
+    options = options || {};
+    
     this.gl = gl;
+    
+    this.bkColor = colorToArray(options.bkColor || '#AA2222');
+    
     this.outdated = true;
     this.objects = [];
 
@@ -7,7 +12,6 @@ Scene = function(gl) {
     vec2.set(this.cameraAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
 
     this.proj = mat4.create();
-    //mat4.perspective(this.proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, -500, 500);
     mat4.perspective(this.proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.1, 1000);
     
     this.view = mat4.create();
@@ -86,22 +90,26 @@ Scene.prototype.draw = function() {
     for (var i=0; i<this.objects.length; ++i) {
         this.objects[i].transform(this.mvp);
     }
-
-    gl.clearColor(0.0, 0.0, 0.0, 0.0);
-    gl.depthFunc(gl.LESS);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    
-    gl.enable(gl.DEPTH_TEST);
-    gl.disable(gl.BLEND);
     
     this.fboOpaque.bind(true);
+    this.gl.enable(gl.DEPTH_TEST);
+    this.gl.depthFunc(gl.LESS);
+    this.gl.disable(gl.BLEND);
+    this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
     this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
     for (var i=0; i<this.objects.length; ++i) {
         this.objects[i].draw(1);
     }
     this.fboOpaque.unbind();
 
     this.fboTransparent.bind(true);
+    this.gl.enable(gl.DEPTH_TEST);
+    //this.gl.depthFunc(gl.GREATER);
+    this.gl.disable(gl.BLEND);
+    this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
     this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     for (var i=0; i<this.objects.length; ++i) {
         this.objects[i].draw(2);
@@ -109,6 +117,12 @@ Scene.prototype.draw = function() {
     this.fboTransparent.unbind();
 
     this.fboId.bind(true);
+    this.gl.enable(gl.DEPTH_TEST);
+    this.gl.depthFunc(gl.LESS);
+    this.gl.disable(gl.BLEND);
+    this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    
     this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     for (var i=0; i<this.objects.length; ++i) {
         this.objects[i].draw(3);
@@ -117,10 +131,11 @@ Scene.prototype.draw = function() {
 
     var quad = GL.Mesh.getScreenQuad();
 
-    this.gl.clearColor(0.5, 0.1, 0.1, 1.0);
-    this.gl.clear(gl.COLOR_BUFFER_BIT);
     this.gl.disable(gl.DEPTH_TEST);
     this.gl.enable(gl.BLEND);
+    this.gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    this.gl.clearColor(this.bkColor[0], this.bkColor[1], this.bkColor[2], this.bkColor[3]);
+    this.gl.clear(gl.COLOR_BUFFER_BIT);
     
     this.textureColorOpaque.bind(0);
     this.textureDepthOpaque.bind(1);
@@ -139,5 +154,5 @@ Scene.prototype.draw = function() {
     // gl.drawTexture(texture_depth1, gl.canvas.width * 0.5, 0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
     // gl.drawTexture(texture_color2, 0, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
     // gl.drawTexture(texture_depth2, gl.canvas.width * 0.5, gl.canvas.height * 0.5, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
-    this.gl.drawTexture(this.textureColorId, 0,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
+    //this.gl.drawTexture(this.textureColorId, 0,0, gl.canvas.width * 0.5, gl.canvas.height * 0.5);
 }

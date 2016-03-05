@@ -1,13 +1,16 @@
-SimplexMesh = function(height) {
+SimplexMesh = function(height, options) {
     var vertex = 6 * 6,
         simTrans = new SimplexTransformation(height);
     
     this.constructor.prototype.constructor();
 
-    this.thickness = 3;
-    this.pattern = 50;
-    this.space = 10;
-    this.antialias = 2;
+    options = options || {};
+
+    this.color = colorToArray(options.color || "#ffffff");
+    this.thickness = options.thickness || 3;
+    this.pattern = options.pattern || 50;
+    this.space = options.space || 10;
+    this.antialias = options.antialias || 2;
 
     this.points = [
         simTrans.toPoint([1, 0, 0, 0]),
@@ -142,6 +145,7 @@ SimplexMesh.prototype.upload = function() {
 SimplexMesh.prototype.draw = function(step) {
     this.shader.uniforms({
         u_mvp: this.mvp,
+        u_color: this.color,
         u_step: step,
         u_texture: 0,
         u_depth: 1,

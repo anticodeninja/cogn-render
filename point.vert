@@ -3,6 +3,7 @@ precision highp float;
 attribute vec3 a_vertex;
 attribute float a_angle;
 attribute vec2 a_position;
+attribute vec4 a_color;
 attribute vec4 a_id;
 
 uniform mat4 u_mvp;
@@ -22,7 +23,7 @@ void main() {
     vertex /= vertex.w;
     vec2 screen = vertex.xy + (radius + u_thickness + u_antialias) * transform * u_aspect;
     
-    v_color = vec4(1.0, 1.0, 1.0, 1.0);
+    v_color = a_color;
     v_pos = a_position + (u_antialias + u_thickness) * sign(a_position);
     v_radius = radius;
     v_id = a_id;

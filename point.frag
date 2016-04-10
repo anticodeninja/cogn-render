@@ -7,12 +7,16 @@ uniform float u_pattern;
 uniform float u_space;
 uniform float u_period;
 
+uniform sampler2D u_depth;
+uniform vec2 u_aspect;
+
 varying float v_radius;
 varying vec4 v_color;
-varying vec2 v_pos;
 varying vec4 v_id;
+varying vec2 v_pos;
 
 void main() {
+    float prevDepth = texture2D(u_depth, (gl_FragCoord.xy * u_aspect / 2.0)).r;
     float length2 = v_pos.x * v_pos.x + v_pos.y * v_pos.y;
     float reduced_radius = v_radius - u_antialias;
     float full_radius = v_radius + u_thickness;
@@ -32,6 +36,7 @@ void main() {
         if (gl_FragColor.a < 1.0) discard;
     } else if (u_step == 2.0) {
         if (gl_FragColor.a == 1.0) discard;
+        if (gl_FragCoord.z >= prevDepth) discard;
     } else if (u_step == 3.0) {
         if (gl_FragColor.a < 1.0) discard;
         gl_FragColor = v_id;

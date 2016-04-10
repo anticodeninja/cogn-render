@@ -145,15 +145,16 @@ SimplexMesh.prototype.upload = function() {
 SimplexMesh.prototype.draw = function(step) {
     this.shader.uniforms({
         u_mvp: this.mvp,
+        u_aspect: this.scene.cameraAspect,
+        u_far: this.scene.far,
+        u_depth: 0,
+        
         u_color: this.color,
         u_step: step,
-        u_texture: 0,
-        u_depth: 1,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
         u_pattern: this.pattern,
         u_space: this.space,
-        u_period: this.pattern + this.space,
-        u_aspect: this.scene.cameraAspect,
+        u_period: this.pattern + this.space
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }

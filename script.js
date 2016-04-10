@@ -21,7 +21,7 @@ function init() {
     var camAngleX = 0.0;
     var camAngleY = 0.0;
     
-    var scene = new Scene(gl, {"bkColor": "#ffffff"});
+    var scene = new Scene(gl, {"bkColor": "#662222"});
     setCamera(scene, camDistance, camAngleX, camAngleY);
     var animation = true;
     var simTrans = new SimplexTransformation(200);
@@ -45,6 +45,12 @@ function init() {
     gl.onmousedown = function(e) {
         console.log(scene.getObjectId(e.canvasx, e.canvasy));
     }
+
+    // new PointMesh({ antialias: 10 })
+    //     .addPoint([-20, 0,   0], {color: "#ff0000", radius: 100, id: 1})
+    //     .addPoint([ 0, 40, 100], {color: "#00ff00", radius: 100, id: 2})
+    //     .addPoint([ 20, 0, 200], {color: "#0000ff", radius: 100, id: 3})
+    //     .setScene(scene);
 
     new PointMesh()
         .addPoint(simTrans.toPoint([6, 10, 40, 50]), {color: "#e01b1b", radius: 6, id: 1})

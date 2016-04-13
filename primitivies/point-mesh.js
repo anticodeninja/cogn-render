@@ -1,9 +1,14 @@
+var core = require("../core/main.js");
+var utils = require("../utils/main.js");
+var vertShader = require("./point.vert");
+var fragShader = require("./point.frag");
+
 PointMesh = function(options) {
     this.constructor.prototype.constructor();
 
     options = options || {};
 
-    this.borderColor = colorToArray(options.color || "#000000");
+    this.borderColor = utils.colorToArray(options.color || "#000000");
     this.thickness = options.thickness || 1;
     this.antialias = options.antialias || 2;
 
@@ -12,7 +17,7 @@ PointMesh = function(options) {
     this.colors = [];
     this.radius = [];
     this.ids = [];
-    
+
     this.data = {
         vertexes: null,
         angles: null,
@@ -29,20 +34,20 @@ PointMesh = function(options) {
         a_id: null
     };
 
-    this.shader = Shader.fromURL("point.vert", "point.frag");
+    this.shader = new Shader(vertShader, fragShader);
 }
 
-PointMesh.prototype = Object.create(BaseMesh.prototype);
+PointMesh.prototype = Object.create(core.BaseMesh.prototype);
 
 PointMesh.prototype.addPoint = function(value, options)
 {
     options = options || {};
-    
+
     this.length += 1;
     this.points.push(vec3.clone(value));
     this.radius.push(options.radius || 1.0);
-    this.colors.push(colorToArray(options.color || "#ffffff"));
-    this.ids.push(idToColor(options.id || 0));
+    this.colors.push(utils.colorToArray(options.color || "#ffffff"));
+    this.ids.push(utils.idToColor(options.id || 0));
 
     return this;
 }
@@ -51,7 +56,7 @@ PointMesh.prototype.upload = function() {
     var i, j, right, top, radius, point, color, id;
 
     vertex = 6 * this.length;
-    
+
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
         this.data.vertexes = new Float32Array(3 * vertex);
         this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
@@ -81,7 +86,7 @@ PointMesh.prototype.upload = function() {
         for (j = 0; j < 6; ++j) {
             top = j == 2 || j == 4 || j == 5;
             right = j == 1 || j == 2 || j == 4;
-            
+
             point = this.points[i];
             this.data.vertexes[6*3*i + 3*j + 0] = point[0];
             this.data.vertexes[6*3*i + 3*j + 1] = point[1];
@@ -120,9 +125,11 @@ PointMesh.prototype.draw = function(step) {
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
         u_depth: 0,
-        
+
         u_step: step,
         u_thickness: this.thickness,
         u_antialias: this.antialias
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
+
+module.exports = PointMesh;

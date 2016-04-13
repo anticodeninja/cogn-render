@@ -1,9 +1,14 @@
-LineMesh = function(options) {
+var core = require("../core/main.js");
+var utils = require("../utils/main.js");
+var vertShader = require("./line.vert");
+var fragShader = require("./line.frag");
+
+var LineMesh = function(options) {
     this.constructor.prototype.constructor();
 
     options = options || {};
 
-    this.color = colorToArray(options.color || "#ffffff");
+    this.color = utils.colorToArray(options.color || "#ffffff");
     this.thickness = options.thickness || 3;
     this.pattern = options.pattern || 50;
     this.space = options.space || 10;
@@ -13,7 +18,7 @@ LineMesh = function(options) {
     this.points = [];
     this.angles = [];
     this.lengths = [];
-    
+
     this.data = {
         vertexes: null,
         angles: null,
@@ -26,10 +31,10 @@ LineMesh = function(options) {
         a_position: null
     };
 
-    this.shader = Shader.fromURL("line.vert", "line.frag");
+    this.shader = new Shader(vertShader, fragShader);
 }
 
-LineMesh.prototype = Object.create(BaseMesh.prototype);
+LineMesh.prototype = Object.create(core.BaseMesh.prototype);
 
 LineMesh.prototype.addPoint = function(value)
 {
@@ -55,28 +60,28 @@ LineMesh.prototype.transform = function(mat)
 
     this.lengths[0] = 0.0;
     this.angles[this.length - 1] = 0.0;
-    
+
     vec3.transformMat4(prev, this.points[0], mat);
     for (i = 1; i < this.length; ++i) {
         vec3.transformMat4(next, this.points[i], mat);
         vec2.set(temp,
                  (next[0] - prev[0]) / this.scene.cameraAspect[0],
                  (next[1] - prev[1]) / this.scene.cameraAspect[1]);
-        
+
         this.lengths[i] = this.lengths[i - 1] + Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
         this.angles[i - 1] = Math.atan2(temp[1], temp[0]);
-        
+
         vec3.copy(prev, next);
     }
 
-    this.upload();    
+    this.upload();
 }
 
 LineMesh.prototype.upload = function() {
     var i, j, right, top, point;
 
     vertex = 6 * (this.length - 1);
-    
+
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
         this.data.vertexes = new Float32Array(3 * vertex);
         this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
@@ -96,7 +101,7 @@ LineMesh.prototype.upload = function() {
         for (j = 0; j < 6; ++j) {
             top = j == 2 || j == 4 || j == 5;
             right = j == 1 || j == 2 || j == 4;
-            
+
             point = this.points[right ? i + 1 : i];
             this.data.vertexes[6*3*i + 3*j + 0] = point[0];
             this.data.vertexes[6*3*i + 3*j + 1] = point[1];
@@ -121,7 +126,7 @@ LineMesh.prototype.draw = function(step) {
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
         u_depth: 0,
-        
+
         u_color: this.color,
         u_step: step,
         u_thickness: this.thickness,
@@ -131,3 +136,5 @@ LineMesh.prototype.draw = function(step) {
         u_period: this.pattern + this.space,
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
+
+module.exports = LineMesh;

@@ -80,7 +80,7 @@ SimplexTransformation.prototype.toPoint = function(h, path) {
         chunk;
 
     coord[1] = this.size / 3 * 2;
-    
+
     for (i = 0; i < h.length - 1; ++i) {
         height -= h[i];
         chunkLength = height * this.legKoef;
@@ -98,7 +98,7 @@ SimplexTransformation.prototype.toPoint = function(h, path) {
             path.push(chunk);
         }
     }
-    
+
     return coord;
 }
 
@@ -126,12 +126,12 @@ SimplexTransformation.prototype.normalize = function(h) {
         koef = 1,
         sum = 0,
         res = new Float32Array(h.length);
-    
+
     for (i=0; i<h.length; ++i) {
         sum += h[i];
     }
     koef = this.size / sum;
-    
+
     for (i=0; i<h.length; ++i) {
         res[i] = h[i] * koef;
     }
@@ -139,3 +139,4 @@ SimplexTransformation.prototype.normalize = function(h) {
     return res;
 }
 
+module.exports = SimplexTransformation;

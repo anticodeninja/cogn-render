@@ -32,7 +32,7 @@ void main() {
     }
 
     float koef_y = 1.0 - smoothstep(u_thickness, u_thickness + u_antialias, abs(v_pos.y));
-        
+
     gl_FragColor.a *= koef_x * koef_y;
 
     if (u_step == 1.0) {

@@ -20,9 +20,9 @@ void main() {
     vec4 vertex = u_mvp * vec4(a_vertex, 1.0);
     vertex.xy /= vertex.w;
     vec2 screen = vertex.xy + (u_thickness + u_antialias) * transform * u_aspect;
-    
+
     v_color = u_color;
     v_pos = a_position + vec2(0.0, u_antialias * sign(a_position.y));
-    
+
     gl_Position = vec4(screen, vertex.z / u_far, 1.0);
 }

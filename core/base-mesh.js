@@ -1,4 +1,4 @@
-BaseMesh = function() {
+var BaseMesh = function() {
     this.scene = null;
     this.mvp = mat4.create();
 }
@@ -13,3 +13,5 @@ BaseMesh.prototype.setScene = function(scene) {
 
     return this;
 }
+
+module.exports = BaseMesh;

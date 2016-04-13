@@ -1,12 +1,17 @@
-SimplexMesh = function(height, options) {
+var core = require("../core/main.js");
+var utils = require("../utils/main.js");
+var vertShader = require("./line.vert");
+var fragShader = require("./line.frag");
+
+var SimplexMesh = function(height, options) {
     var vertex = 6 * 6,
-        simTrans = new SimplexTransformation(height);
-    
+        simTrans = new utils.SimplexTransformation(height);
+
     this.constructor.prototype.constructor();
 
     options = options || {};
 
-    this.color = colorToArray(options.color || "#ffffff");
+    this.color = utils.colorToArray(options.color || "#ffffff");
     this.thickness = options.thickness || 3;
     this.pattern = options.pattern || 50;
     this.space = options.space || 10;
@@ -16,7 +21,7 @@ SimplexMesh = function(height, options) {
         simTrans.toPoint([1, 0, 0, 0]),
         simTrans.toPoint([0, 1, 0, 0]),
         simTrans.toPoint([0, 0, 1, 0]),
-        simTrans.toPoint([0, 0, 0, 1]), 
+        simTrans.toPoint([0, 0, 0, 1]),
     ];
     this.pointTransformed = [
         vec3.create(),
@@ -53,7 +58,7 @@ SimplexMesh = function(height, options) {
     this.front = [
         true, true, true, false, false, false
     ]
-    
+
     this.data = {
         vertexes: new Float32Array(3 * vertex),
         angles: new Float32Array(vertex),
@@ -66,10 +71,10 @@ SimplexMesh = function(height, options) {
         a_position: new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW)
     };
 
-    this.shader = Shader.fromURL("line.vert", "line.frag");   
+    this.shader = new Shader(vertShader, fragShader);
 }
 
-SimplexMesh.prototype = Object.create(BaseMesh.prototype);
+SimplexMesh.prototype = Object.create(core.BaseMesh.prototype);
 
 SimplexMesh.prototype.transform = function(mat)
 {
@@ -79,7 +84,7 @@ SimplexMesh.prototype.transform = function(mat)
         next = vec3.create(),
         temp2 = vec2.create(),
         temp3 = vec3.create();
-    
+
     for (i = 0; i < this.points.length; ++i) {
         vec3.transformMat4(this.pointTransformed[i], this.points[i], mat);
     }
@@ -87,11 +92,11 @@ SimplexMesh.prototype.transform = function(mat)
     for (i = 0; i < this.lines.length; ++i) {
         vec3.copy(prev, this.pointTransformed[this.lines[i][0]]);
         vec3.copy(next, this.pointTransformed[this.lines[i][1]]);
-        
+
         vec2.set(temp2,
                  (next[0] - prev[0]) / this.scene.cameraAspect[0],
                  (next[1] - prev[1]) / this.scene.cameraAspect[1]);
-        
+
         this.lengths[i] = Math.sqrt(temp2[0]*temp2[0] + temp2[1]*temp2[1]);
         this.angles[i] = Math.atan2(temp2[1], temp2[0]);
         this.front[i] = false;
@@ -104,7 +109,7 @@ SimplexMesh.prototype.transform = function(mat)
         vec3.subtract(next,
                       this.pointTransformed[this.edgePoints[i][1]],
                       this.pointTransformed[this.edgePoints[i][2]]);
-        
+
         vec3.cross(temp3, prev, next);
         if (temp3[2] < 0) {
             for (j = 0; j < this.edgeLines[i].length; ++j) {
@@ -113,7 +118,7 @@ SimplexMesh.prototype.transform = function(mat)
         }
     }
 
-    this.upload();    
+    this.upload();
 }
 
 SimplexMesh.prototype.upload = function() {
@@ -123,7 +128,7 @@ SimplexMesh.prototype.upload = function() {
         for (j = 0; j < 6; ++j) {
             top = j == 2 || j == 4 || j == 5;
             right = j == 1 || j == 2 || j == 4;
-            
+
             point = this.points[right ? this.lines[i][1] : this.lines[i][0]];
             this.data.vertexes[6*3*i + 3*j + 0] = point[0];
             this.data.vertexes[6*3*i + 3*j + 1] = point[1];
@@ -148,7 +153,7 @@ SimplexMesh.prototype.draw = function(step) {
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
         u_depth: 0,
-        
+
         u_color: this.color,
         u_step: step,
         u_thickness: this.thickness,
@@ -158,3 +163,5 @@ SimplexMesh.prototype.draw = function(step) {
         u_period: this.pattern + this.space
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
+
+module.exports = SimplexMesh;

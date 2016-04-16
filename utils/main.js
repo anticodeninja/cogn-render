@@ -34,7 +34,25 @@ function colorToArray(color) {
     return res;
 }
 
+function generatePattern(p) {
+    var i, temp;
+    if (p.length == 1) {
+        temp = vec4.fromValues(0, 0, 0, 0);
+    } else if (p.length == 2) {
+        temp = vec4.fromValues(p[0], p[1], p[0], p[1]);
+    } else if (p.length == 4) {
+        temp = vec4.fromValues(p[0], p[1], p[2], p[3]);
+    }
+
+    for (i = 1; i < 4; ++i) {
+        temp[i] += temp[i - 1];
+    }
+
+    return temp;
+}
+
 module.exports.idToColor = idToColor;
 module.exports.colorToId = colorToId;
 module.exports.colorToArray = colorToArray;
+module.exports.generatePattern = generatePattern;
 module.exports.SimplexTransformation = require("./simplex-transformation.js")

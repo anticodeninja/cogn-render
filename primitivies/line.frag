@@ -3,9 +3,7 @@ precision highp float;
 uniform float u_step;
 uniform float u_antialias;
 uniform float u_thickness;
-uniform float u_pattern;
-uniform float u_space;
-uniform float u_period;
+uniform vec4 u_pattern;
 
 uniform sampler2D u_depth;
 uniform vec2 u_aspect;
@@ -17,10 +15,6 @@ varying vec4 v_color;
 
 void main() {
     float prevDepth = texture2D(u_depth, (gl_FragCoord.xy * u_aspect / 2.0)).r;
-    float modded = mod(v_offset, u_period);
-    if (modded > u_pattern) {
-        discard;
-    }
 
     gl_FragColor = v_color;
 
@@ -32,23 +26,25 @@ void main() {
     }
 
     float koef_r = 1.0;
-    if (length2 > 0.0) {
-        float max_radius = u_thickness + u_antialias;
-
-        if (length2 > max_radius * max_radius) {
-            discard;
-        } else if (length2 > u_thickness * u_thickness) {
-            koef_r = 1.0 - smoothstep(u_thickness, max_radius, sqrt(length2));
-        }
+    if (length2 > 0.0 && length2 > u_thickness * u_thickness) {
+        koef_r = 1.0 - smoothstep(u_thickness, u_thickness + u_antialias, sqrt(length2));
     }
 
     float koef_x = 1.0;
-    if (modded > u_antialias && modded < (u_pattern - u_antialias)) {
-        koef_x = 1.0;
-    } else if (modded <= u_antialias) {
-        koef_x = smoothstep(0.0, u_antialias, modded);
-    } else {
-        koef_x = 1.0 - smoothstep(u_pattern - u_antialias, u_pattern, modded);
+    if (u_pattern[3] != 0.0) {
+        float offset = mod(v_offset, u_pattern[3]);
+        float filled = offset < u_pattern[1] ? u_pattern[0] : u_pattern[2];
+        float space = offset < u_pattern[1] ? u_pattern[1] : u_pattern[3];
+
+        if (offset < (filled - u_antialias)) {
+            koef_x = 1.0;
+        } else if (offset < filled) {
+            koef_x = 1.0 - smoothstep(filled - u_antialias, filled, offset);
+        } else if (offset < (space - u_antialias)) {
+            koef_x = 0.0;
+        } else {
+            koef_x = smoothstep(space - u_antialias, space, offset);
+        }
     }
 
     float koef_y = 1.0 - smoothstep(u_thickness, u_thickness + u_antialias, abs(v_pos.y));

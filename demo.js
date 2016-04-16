@@ -60,10 +60,15 @@ function init() {
     //     .setScene(scene);
 
     // animation = false;
-    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": 40}))
-    //     .addPoint([-40, 0, 0])
-    //     .addPoint([ 0, 40, 100])
-    //     .addPoint([ 40, 0, 200])
+    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": [40,10,10,10]}))
+    //     .addPoint([-200,   0, 0])
+    //     .addPoint([   0, 200, 100])
+    //     .addPoint([ 200,   0, 200])
+    //     .setScene(scene);
+    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": [0]}))
+    //     .addPoint([ 200,    0, 0])
+    //     .addPoint([   0, -200, 100])
+    //     .addPoint([-200,    0, 200])
     //     .setScene(scene);
     // new primitivies.SimplexMesh(200, {"color": "#000000"})
     //     .setScene(scene);
@@ -98,7 +103,7 @@ function init() {
         .addPoint(simTrans.toPoint([50, 45, 16, 3]), {color: "#07f70b", radius: 6, id: 1})
         .setScene(scene);
 
-    new primitivies.LineMesh({"color": "#000000", "pattern": Infinity})
+    new primitivies.LineMesh({"color": "#000000", "pattern": [Infinity, 0.0]})
         .addPoint(simTrans.toPoint([8, 11, 33, 50]))
         .addPoint(simTrans.toPoint([22, 22, 38, 49]))
         .addPoint(simTrans.toPoint([20, 24, 6, 22]))

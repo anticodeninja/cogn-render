@@ -10,8 +10,7 @@ var LineMesh = function(options) {
 
     this.color = utils.colorToArray(options.color || "#ffffff");
     this.thickness = options.thickness || 3;
-    this.pattern = options.pattern || 50;
-    this.space = options.space || 10;
+    this.pattern = utils.generatePattern(options.pattern || [50, 10]);
     this.antialias = options.antialias || 2;
 
     this.length = 0;
@@ -153,9 +152,7 @@ LineMesh.prototype.draw = function(step) {
         u_step: step,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
-        u_pattern: this.pattern,
-        u_space: this.space,
-        u_period: this.pattern + this.space,
+        u_pattern: this.pattern
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
 

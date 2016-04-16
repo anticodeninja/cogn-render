@@ -13,8 +13,7 @@ var SimplexMesh = function(height, options) {
 
     this.color = utils.colorToArray(options.color || "#ffffff");
     this.thickness = options.thickness || 3;
-    this.pattern = options.pattern || 50;
-    this.space = options.space || 10;
+    this.pattern = utils.generatePattern(options.pattern || [50, 10]);
     this.antialias = options.antialias || 2;
 
     this.points = [
@@ -141,7 +140,7 @@ SimplexMesh.prototype.upload = function() {
             this.data.angles[6*i + j] = this.angles[i]
                 + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
             this.data.lengths[6*i + j] = this.lengths[i];
-            this.data.offsets[6*i + j] = right ? (this.front[i] ? this.period : this.lengths[i]) : 0.0;
+            this.data.offsets[6*i + j] = right ? (this.front[i] ? 0.0 : this.lengths[i]) : 0.0;
 
             this.data.positions[6*2*i + 2*j + 0] = right ? this.lengths[i] : 0.0;
             this.data.positions[6*2*i + 2*j + 1] = top ? -this.thickness : this.thickness;
@@ -166,9 +165,7 @@ SimplexMesh.prototype.draw = function(step) {
         u_step: step,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
-        u_pattern: this.pattern,
-        u_space: this.space,
-        u_period: this.pattern + this.space
+        u_pattern: this.pattern
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
 

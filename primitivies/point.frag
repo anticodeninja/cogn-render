@@ -3,9 +3,6 @@ precision highp float;
 uniform float u_step;
 uniform float u_antialias;
 uniform float u_thickness;
-uniform float u_pattern;
-uniform float u_space;
-uniform float u_period;
 
 uniform sampler2D u_depth;
 uniform vec2 u_aspect;
@@ -29,7 +26,7 @@ void main() {
     gl_FragColor = v_color;
 
     if (length2 > full_radius * full_radius) {
-        gl_FragColor.a = 1.0 - smoothstep(full_radius, full_radius + u_antialias, sqrt(length2));
+        gl_FragColor.a = 1.0 - smoothstep(full_radius, max_radius, sqrt(length2));
     }
 
     if (u_step == 1.0) {

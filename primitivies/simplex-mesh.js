@@ -62,12 +62,16 @@ var SimplexMesh = function(height, options) {
     this.data = {
         vertexes: new Float32Array(3 * vertex),
         angles: new Float32Array(vertex),
+        lengths: new Float32Array(vertex),
+        offsets: new Float32Array(vertex),
         positions: new Float32Array(2 * vertex)
     };
 
     this.buffers = {
-        a_vertex: new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW),
+        a_vertex: new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.STATIC_DRAW),
         a_angle: new GL.Buffer(gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW),
+        a_length: new GL.Buffer(gl.ARRAY_BUFFER, this.data.lengths, 1, gl.DYNAMIC_DRAW),
+        a_offset: new GL.Buffer(gl.ARRAY_BUFFER, this.data.offsets, 1, gl.DYNAMIC_DRAW),
         a_position: new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW)
     };
 
@@ -136,14 +140,18 @@ SimplexMesh.prototype.upload = function() {
 
             this.data.angles[6*i + j] = this.angles[i]
                 + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
+            this.data.lengths[6*i + j] = this.lengths[i];
+            this.data.offsets[6*i + j] = right ? (this.front[i] ? this.period : this.lengths[i]) : 0.0;
 
-            this.data.positions[6*2*i + 2*j + 0] = right ? (this.front[i] ? this.period : this.lengths[i]) : 0;
+            this.data.positions[6*2*i + 2*j + 0] = right ? this.lengths[i] : 0.0;
             this.data.positions[6*2*i + 2*j + 1] = top ? -this.thickness : this.thickness;
         }
     }
 
     this.buffers.a_vertex.upload();
     this.buffers.a_angle.upload();
+    this.buffers.a_length.upload();
+    this.buffers.a_offset.upload();
     this.buffers.a_position.upload();
 }
 

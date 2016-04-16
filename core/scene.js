@@ -43,7 +43,7 @@ Scene.prototype.getObjectId = function(posX, posY) {
     this.gl.readPixels(posX, posY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, color);
     this.idLayer.fbo.unbind();
 
-    return colorToId(color);
+    return utils.colorToId(color);
 }
 
 Scene.prototype.addObject = function(obj) {

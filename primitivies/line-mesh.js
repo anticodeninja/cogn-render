@@ -18,16 +18,21 @@ var LineMesh = function(options) {
     this.points = [];
     this.angles = [];
     this.lengths = [];
+    this.offsets = [];
 
     this.data = {
         vertexes: null,
         angles: null,
+        lengths: null,
+        offsets: null,
         positions: null
     };
 
     this.buffers = {
         a_vertex: null,
         a_angle: null,
+        a_length: null,
+        a_offset: null,
         a_position: null
     };
 
@@ -42,6 +47,7 @@ LineMesh.prototype.addPoint = function(value)
     this.points.push(vec3.clone(value));
     this.angles.push(0);
     this.lengths.push(0);
+    this.offsets.push(0);
 
     return this;
 }
@@ -59,6 +65,7 @@ LineMesh.prototype.transform = function(mat)
     }
 
     this.lengths[0] = 0.0;
+    this.offsets[0] = 0.0;
     this.angles[this.length - 1] = 0.0;
 
     vec3.transformMat4(prev, this.points[0], mat);
@@ -68,7 +75,8 @@ LineMesh.prototype.transform = function(mat)
                  (next[0] - prev[0]) / this.scene.cameraAspect[0],
                  (next[1] - prev[1]) / this.scene.cameraAspect[1]);
 
-        this.lengths[i] = this.lengths[i - 1] + Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+        this.lengths[i] = Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+        this.offsets[i] = this.offsets[i - 1] + this.lengths[i];
         this.angles[i - 1] = Math.atan2(temp[1], temp[0]);
 
         vec3.copy(prev, next);
@@ -84,12 +92,22 @@ LineMesh.prototype.upload = function() {
 
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
         this.data.vertexes = new Float32Array(3 * vertex);
-        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
+        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.STATIC_DRAW);
     }
 
     if (this.data.angles == null || (this.data.angles.length !== vertex)) {
         this.data.angles = new Float32Array(vertex);
         this.buffers.a_angle = new GL.Buffer(gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW);
+    }
+
+    if (this.data.lengths == null || (this.data.lengths.length !== vertex)) {
+        this.data.lengths = new Float32Array(vertex);
+        this.buffers.a_length = new GL.Buffer(gl.ARRAY_BUFFER, this.data.lengths, 1, gl.DYNAMIC_DRAW);
+    }
+
+    if (this.data.offsets == null || (this.data.offsets.length !== vertex)) {
+        this.data.offsets = new Float32Array(vertex);
+        this.buffers.a_offset = new GL.Buffer(gl.ARRAY_BUFFER, this.data.offsets, 1, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.positions == null || (this.data.positions.length !== 2 * vertex)) {
@@ -109,14 +127,18 @@ LineMesh.prototype.upload = function() {
 
             this.data.angles[6*i + j] = this.angles[i]
                 + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
+            this.data.lengths[6*i + j] = this.lengths[i + 1];
+            this.data.offsets[6*i + j] = this.offsets[right ? i + 1 : i];
 
-            this.data.positions[6*2*i + 2*j + 0] = this.lengths[right ? i + 1 : i];
+            this.data.positions[6*2*i + 2*j + 0] = right ? this.lengths[i + 1] : 0.0;
             this.data.positions[6*2*i + 2*j + 1] = top ? -this.thickness : this.thickness;
         }
     }
 
     this.buffers.a_vertex.upload();
     this.buffers.a_angle.upload();
+    this.buffers.a_length.upload();
+    this.buffers.a_offset.upload();
     this.buffers.a_position.upload();
 }
 

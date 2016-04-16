@@ -52,10 +52,20 @@ function init() {
         console.log(scene.getObjectId(e.canvasx, e.canvasy));
     }
 
-    // new PointMesh({ antialias: 10 })
+    // animation = false;
+    // new primitivies.PointMesh({ antialias: 10 })
     //     .addPoint([-20, 0,   0], {color: "#ff0000", radius: 100, id: 1})
     //     .addPoint([ 0, 40, 100], {color: "#00ff00", radius: 100, id: 2})
     //     .addPoint([ 20, 0, 200], {color: "#0000ff", radius: 100, id: 3})
+    //     .setScene(scene);
+
+    // animation = false;
+    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": 40}))
+    //     .addPoint([-40, 0, 0])
+    //     .addPoint([ 0, 40, 100])
+    //     .addPoint([ 40, 0, 200])
+    //     .setScene(scene);
+    // new primitivies.SimplexMesh(200, {"color": "#000000"})
     //     .setScene(scene);
 
     new primitivies.PointMesh()

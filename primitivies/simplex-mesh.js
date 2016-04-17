@@ -11,10 +11,10 @@ var SimplexMesh = function(height, options) {
 
     options = options || {};
 
-    this.color = utils.colorToArray(options.color || "#ffffff");
-    this.thickness = options.thickness || 3;
-    this.pattern = utils.generatePattern(options.pattern || [50, 10]);
-    this.antialias = options.antialias || 2;
+    this.color = utils.colorToArray(utils.expandDefault(options.color, "#ffffff"));
+    this.thickness = utils.expandDefault(options.thickness, 3);
+    this.pattern = utils.generatePattern(utils.expandDefault(options.pattern, [50, 10]));
+    this.antialias = utils.expandDefault(options.antialias, 2);
 
     this.points = [
         simTrans.toPoint([1, 0, 0, 0]),

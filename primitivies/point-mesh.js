@@ -8,9 +8,9 @@ PointMesh = function(options) {
 
     options = options || {};
 
-    this.borderColor = utils.colorToArray(options.color || "#000000");
-    this.thickness = options.thickness || 1;
-    this.antialias = options.antialias || 2;
+    this.borderColor = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
+    this.thickness = utils.expandDefault(options.thickness, 1);
+    this.antialias = utils.expandDefault(options.antialias, 2);
 
     this.length = 0;
     this.points = [];

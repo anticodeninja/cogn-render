@@ -14,6 +14,10 @@ function idToColor(id) {
     return temp;
 }
 
+function expandDefault(value, defValue) {
+    return value !== undefined ? value : defValue;
+}
+
 function colorToId(color) {
     if (color[3] == 0.0)
         return 0;
@@ -28,7 +32,7 @@ function colorToArray(color) {
     res[1] = parseInt(color.substr(3, 2), 16) / 255;
     res[2] = parseInt(color.substr(5, 2), 16) / 255;
     res[3] = color.length > 7
-        ? parseInt(color.substring(7, 2), 16) / 255
+        ? parseInt(color.substr(7, 2), 16) / 255
         : 1.0;
 
     return res;
@@ -53,6 +57,7 @@ function generatePattern(p) {
 
 module.exports.idToColor = idToColor;
 module.exports.colorToId = colorToId;
+module.exports.expandDefault = expandDefault;
 module.exports.colorToArray = colorToArray;
 module.exports.generatePattern = generatePattern;
 module.exports.SimplexTransformation = require("./simplex-transformation.js")

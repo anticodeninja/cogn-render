@@ -27,7 +27,7 @@ function init() {
     var camAngleX = 0.0;
     var camAngleY = 0.0;
 
-    var scene = new core.Scene(gl, {"bkColor": "#662222"});
+    var scene = new core.Scene(gl, {"bkColor": "#662222", transparentSteps: 2});
     setCamera(scene, camDistance, camAngleX, camAngleY);
     var animation = true;
     var simTrans = new utils.SimplexTransformation(200);

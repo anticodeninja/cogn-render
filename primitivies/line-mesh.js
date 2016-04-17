@@ -8,10 +8,10 @@ var LineMesh = function(options) {
 
     options = options || {};
 
-    this.color = utils.colorToArray(options.color || "#ffffff");
-    this.thickness = options.thickness || 3;
-    this.pattern = utils.generatePattern(options.pattern || [50, 10]);
-    this.antialias = options.antialias || 2;
+    this.color = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
+    this.thickness = utils.expandDefault(options.thickness, 3);
+    this.pattern = utils.generatePattern(utils.expandDefault(options.pattern, [50, 10]));
+    this.antialias = utils.expandDefault(options.antialias, 2);
 
     this.length = 0;
     this.points = [];

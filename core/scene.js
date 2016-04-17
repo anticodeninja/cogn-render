@@ -8,8 +8,8 @@ var Scene = function(gl, options) {
     this.gl = gl;
 
     this.far = 1000;
-    this.bkColor = utils.colorToArray(options.bkColor || '#AA2222');
-    this.transparentSteps = options.transparentSteps || 2;
+    this.bkColor = utils.colorToArray(utils.expandDefault(options.bkColor, '#AA2222'));
+    this.transparentSteps = utils.expandDefault(options.transparentSteps, 2);
 
     this.outdated = true;
     this.objects = [];

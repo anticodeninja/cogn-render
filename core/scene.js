@@ -80,6 +80,13 @@ Scene.prototype.draw = function() {
     this.gl.clearDepth(1.0);
     this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
+    this.idLayer.fbo.bind(true);
+    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    for (var i=0; i<this.objects.length; ++i) {
+        this.objects[i].draw(0);
+    }
+    this.idLayer.fbo.unbind();
+
     this.opaqueLayer.fbo.bind(true);
     this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     for (i = 0; i<this.objects.length; ++i) {
@@ -87,32 +94,18 @@ Scene.prototype.draw = function() {
     }
     this.opaqueLayer.fbo.unbind();
 
-    this.idLayer.fbo.bind(true);
-    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    for (var i=0; i<this.objects.length; ++i) {
-        this.objects[i].draw(3);
-    }
-    this.idLayer.fbo.unbind();
-
     // Transparent Layers Rendering
-    this.gl.enable(gl.DEPTH_TEST);
-    this.gl.depthFunc(gl.GEQUAL);
-    this.gl.disable(gl.BLEND);
-    this.gl.clearDepth(0.0);
-    this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
-
     for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
         this.transparentLayers[transparentStep].fbo.bind(true);
         this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        if (transparentStep == 0) {
-            this.opaqueLayer.depth.bind(0);
-        } else {
-            this.transparentLayers[transparentStep - 1].depth.bind(0);
+        this.opaqueLayer.depth.bind(0);
+        if (transparentStep > 0) {
+            this.transparentLayers[transparentStep - 1].depth.bind(1);
         }
 
         for (var i=0; i<this.objects.length; ++i) {
-            this.objects[i].draw(2);
+            this.objects[i].draw(2 + transparentStep);
         }
 
         this.transparentLayers[transparentStep].fbo.unbind();
@@ -129,7 +122,7 @@ Scene.prototype.draw = function() {
     gl.drawTexture(this.opaqueLayer.color,
                    0, 0,
                    gl.canvas.width, gl.canvas.height);
-    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
+    for (transparentStep = this.transparentSteps - 1; transparentStep >= 0; --transparentStep) {
         gl.drawTexture(this.transparentLayers[transparentStep].color,
                        0, 0,
                        gl.canvas.width, gl.canvas.height);
@@ -141,24 +134,22 @@ Scene.prototype.draw = function() {
     gl.drawTexture(this.opaqueLayer.depth,
                    0, gl.canvas.height * 0.8,
                    gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.transparentLayers[0].color,
-                   gl.canvas.width * 0.2, 0,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.transparentLayers[0].depth,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.8,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.transparentLayers[1].color,
-                   gl.canvas.width * 0.4, 0,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.transparentLayers[1].depth,
-                   gl.canvas.width * 0.4, gl.canvas.height * 0.8,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+
     gl.drawTexture(this.idLayer.color,
                    gl.canvas.width * 0.8, 0,
                    gl.canvas.width * 0.2, gl.canvas.height * 0.2);
     gl.drawTexture(this.idLayer.depth,
                    gl.canvas.width * 0.8, gl.canvas.height * 0.8,
                    gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+
+    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
+        gl.drawTexture(this.transparentLayers[transparentStep].color,
+                       gl.canvas.width * 0.2 * (1 + transparentStep), 0,
+                       gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+        gl.drawTexture(this.transparentLayers[transparentStep].depth,
+                       gl.canvas.width * 0.2 * (1 + transparentStep), gl.canvas.height * 0.8,
+                       gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+    }
 }
 
 module.exports = Scene;

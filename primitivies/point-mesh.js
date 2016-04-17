@@ -124,7 +124,9 @@ PointMesh.prototype.draw = function(step) {
         u_mvp: this.mvp,
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
-        u_depth: 0,
+
+        u_opaque: 0,
+        u_prev: 1,
 
         u_step: step,
         u_thickness: this.thickness,

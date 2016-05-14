@@ -4,13 +4,7 @@ var vertShader = require("./point.vert");
 var fragShader = require("./point.frag");
 
 PointMesh = function(options) {
-    this.constructor.prototype.constructor();
-
-    options = options || {};
-
-    this.borderColor = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
-    this.thickness = utils.expandDefault(options.thickness, 1);
-    this.antialias = utils.expandDefault(options.antialias, 2);
+    this.constructor.prototype.constructor.call(this, options);
 
     this.length = 0;
     this.points = [];
@@ -38,6 +32,23 @@ PointMesh = function(options) {
 }
 
 PointMesh.prototype = Object.create(core.BaseMesh.prototype);
+
+PointMesh.prototype.setOptions = function(options, initial)
+{
+    if (options.color || initial) {
+        this.borderColor = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
+    }
+
+    if (options.thickness || initial) {
+        this.thickness = utils.expandDefault(options.thickness, 3);
+    }
+
+    if (options.antialias || initial) {
+        this.antialias = utils.expandDefault(options.antialias, 2);
+    }
+
+    return this;
+}
 
 PointMesh.prototype.addPoint = function(value, options)
 {

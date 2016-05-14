@@ -4,14 +4,7 @@ var vertShader = require("./line.vert");
 var fragShader = require("./line.frag");
 
 var LineMesh = function(options) {
-    this.constructor.prototype.constructor();
-
-    options = options || {};
-
-    this.color = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
-    this.thickness = utils.expandDefault(options.thickness, 3);
-    this.pattern = utils.generatePattern(utils.expandDefault(options.pattern, [50, 10]));
-    this.antialias = utils.expandDefault(options.antialias, 2);
+    this.constructor.prototype.constructor.call(this, options);
 
     this.length = 0;
     this.points = [];
@@ -40,6 +33,27 @@ var LineMesh = function(options) {
 
 LineMesh.prototype = Object.create(core.BaseMesh.prototype);
 
+LineMesh.prototype.setOptions = function(options, initial)
+{   
+    if (options.color || initial) {
+        this.color = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
+    }
+
+    if (options.thickness || initial) {
+        this.thickness = utils.expandDefault(options.thickness, 3);
+    }
+
+    if (options.pattern || initial) {
+        this.pattern = utils.generatePattern(utils.expandDefault(options.pattern, [50, 10]));
+    }
+
+    if (options.antialias || initial) {
+        this.antialias = utils.expandDefault(options.antialias, 2);
+    }
+
+    return this;
+}
+
 LineMesh.prototype.addPoint = function(value)
 {
     this.length += 1;
@@ -53,7 +67,8 @@ LineMesh.prototype.addPoint = function(value)
 
 LineMesh.prototype.transform = function(mat)
 {
-    this.constructor.prototype.transform(mat);
+    this.constructor.prototype.transform.call(this, mat);
+
     var i,
         prev = vec3.create(),
         next = vec3.create(),

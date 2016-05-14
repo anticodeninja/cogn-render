@@ -4,13 +4,14 @@
   "description": "",
   "main": "bundle.js",
   "scripts": {
-    "debug": "webpack-dev-server --config webpack-demo.config.js --host 0.0.0.0 --port 8080 --hot --progress --colors",
-    "build": "echo \"It's not implemented yet\" && exit 1",
+    "debug": "webpack-dev-server --config webpack-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
+    "build": "webpack --config webpack-demo.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Artyom Yamshanov",
   "license": "MIT",
   "devDependencies": {
-    "raw-loader": "^0.5.1"
+    "raw-loader": "^0.5.1",
+    "webpack-livereload-plugin": "^0.8.1"
   }
 }

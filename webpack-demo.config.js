@@ -1,4 +1,6 @@
-var webpack = require('webpack');
+var webpack = require('webpack'),
+    LiveReload = require('webpack-livereload-plugin');
+
 module.exports = {
     entry: './demo.js',
     output: {
@@ -9,5 +11,8 @@ module.exports = {
         loaders: [
             { test: /\.(vert)|(frag)$/, loader: "raw-loader" }
         ],
-    }
+    },
+    plugins: [
+        new LiveReload()
+    ]
 }

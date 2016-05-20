@@ -12,49 +12,23 @@ function init() {
         height: container.offsetHeight,
         antialias: false
     });
+    
     container.appendChild(gl.canvas);
-    gl.animate();
-
-    var camera = quat.create();
-    var cameraAnimationSpeed = quat.fromValues(0, 3e-3 * Math.PI, 0, 0);
-    var cameraDeltaTemp = quat.create();
-    var trackBallPos = vec3.create();
-    var trackBallPosPrev = vec3.create();
-
-    quat.calculateW(cameraAnimationSpeed, cameraAnimationSpeed);
 
     var scene = new core.Scene(gl, {
         bkColor: "#662222",
         transparentSteps: 2,
         distance: 600
     });
-    var animation = true;
+
+    scene.setCameraBehavior(new core.cameraBehaviors.AutoRotating(0, 1, 0, Math.PI / 6.0));
+    var mouseDownEvent = scene.onMouseDown.add(function() {
+        scene.setCameraBehavior(new core.cameraBehaviors.OrbitalMouse());
+        scene.onMouseDown.remove(mouseDownEvent);
+    });
+
     var simTrans = new utils.SimplexTransformation(200);
-
-    //get mouse actions
-    gl.captureMouse();
-    gl.onmousemove = function(e) {
-        if (e.dragging) {
-            if (!e.ctrlKey) {
-                scene.getTrackballPosition(trackBallPos, e.canvasx, e.canvasy);
-                quat.rotationTo(cameraDeltaTemp, trackBallPos, trackBallPosPrev);
-                quat.multiply(camera, camera, cameraDeltaTemp);
-                vec3.copy(trackBallPosPrev, trackBallPos);
-                scene.setCameraRotation(camera);
-            } else {
-            }
-
-            scene.invalidate();
-        }
-    }
-
-    gl.onmousedown = function(e) {
-        animation = false;
-        console.log(scene.getObjectId(e.canvasx, e.canvasy));
-        scene.getTrackballPosition(trackBallPos, e.canvasx, e.canvasy);
-        vec3.copy(trackBallPosPrev, trackBallPos);
-    }
-
+    // console.log(scene.getObjectId(e.canvasx, e.canvasy));
     // animation = false;
     // new primitivies.PointMesh({ antialias: 10 })
     //     .addPoint([  0, 0, 150], {color: "#333333ff", radius: 100, id: 1})
@@ -120,14 +94,7 @@ function init() {
     new primitivies.SimplexMesh(200, {"color": "#000000"})
         .setScene(scene);
 
-    gl.onupdate = function(dt)
-    {
-        if (animation) {
-            quat.rotateY(camera, camera, 0.4 * dt);
-            scene.setCameraRotation(camera);
-            scene.invalidate();
-        }
-    };
+    scene.draw();
 }
 
 window.init = init;

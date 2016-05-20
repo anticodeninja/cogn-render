@@ -30,6 +30,8 @@ var Scene = function(gl, options) {
     this.cameraRotation = quat.create();
     this.setCameraRotation(this.cameraRotation);
 
+    this.cameraBehavior = null;
+
     this.mvp = mat4.create();
     this.temp = mat4.create();
 
@@ -40,7 +42,18 @@ var Scene = function(gl, options) {
         this.transparentLayers[i] = new core.RenderingLayer(gl, true);
     }
 
-    this.gl.ondraw = this.draw.bind(this);
+    this.onUpdate = new core.Event();
+    this.onMouseDown = new core.Event();
+    this.onMouseMove = new core.Event();
+    this.onMouseUp = new core.Event();
+
+    this.gl.ondraw = this.drawHandler.bind(this);
+    this.gl.onupdate = this.updateHandler.bind(this);
+    this.gl.onmousedown = this.mouseDownHandler.bind(this);
+    this.gl.onmousemove = this.mouseMoveHandler.bind(this);
+    this.gl.onmouseup = this.mouseUpHandler.bind(this);
+
+    this.gl.captureMouse();
 }
 
 Scene.prototype.getObjectId = function(posX, posY) {
@@ -58,6 +71,18 @@ Scene.prototype.addObject = function(obj) {
     obj.upload();
 }
 
+Scene.prototype.setCameraBehavior = function(behavior) {
+    if (this.cameraBehavior !== null) {
+        this.cameraBehavior.detach(this);
+    }
+
+    this.cameraBehavior = behavior;
+
+    if (this.cameraBehavior !== null) {
+        this.cameraBehavior.attach(this);
+    }
+}
+
 Scene.prototype.getCameraRotation = function(rotation) {
     quat.copy(rotation, this.cameraRotation);
 }
@@ -69,6 +94,7 @@ Scene.prototype.setCameraRotation = function(rotation) {
     vec3.transformQuat(this.viewEye, this.viewEye, rotation);
     vec3.transformQuat(this.viewUp, this.viewUp, rotation);
     mat4.lookAt(this.view, this.viewEye, this.viewCenter, this.viewUp);
+    this.invalidate();
 }
 
 Scene.prototype.getTrackballPosition = function(out, posX, posY) {
@@ -88,11 +114,15 @@ Scene.prototype.getTrackballPosition = function(out, posX, posY) {
     }
 }
 
+Scene.prototype.draw = function() {
+    this.gl.ondraw();
+}
+
 Scene.prototype.invalidate = function() {
     this.outdated = true;
 }
 
-Scene.prototype.draw = function() {
+Scene.prototype.drawHandler = function() {
     var i = 0,
         transparentStep = 0;
 
@@ -183,6 +213,22 @@ Scene.prototype.draw = function() {
                        gl.canvas.width * 0.2 * (1 + transparentStep), gl.canvas.height * 0.8,
                        gl.canvas.width * 0.2, gl.canvas.height * 0.2);
     }
+}
+
+Scene.prototype.updateHandler = function(dt) {
+    this.onUpdate.fire(dt);
+}
+
+Scene.prototype.mouseDownHandler = function(e) {
+    this.onMouseDown.fire(e);
+}
+
+Scene.prototype.mouseMoveHandler = function(e) {
+    this.onMouseMove.fire(e);
+}
+
+Scene.prototype.mouseUpHandler = function(e) {
+    this.onMouseUp.fire(e);
 }
 
 module.exports = Scene;

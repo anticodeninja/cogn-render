@@ -4,14 +4,6 @@ var core = require("./core/main.js");
 var utils = require("./utils/main.js");
 var primitivies = require("./primitivies/main.js");
 
-function setCamera(scene, distance, angleX, angleY) {
-    scene.setCamera([
-        distance * Math.sin(angleY) * Math.cos(angleX),
-        distance * Math.sin(angleX),
-        distance * Math.cos(angleY) * Math.cos(angleX)
-    ], [0, 0, 0], [0, 1, 0]);
-}
-
 function init() {
     var container = document.body;
 
@@ -23,12 +15,19 @@ function init() {
     container.appendChild(gl.canvas);
     gl.animate();
 
-    var camDistance = 600.0;
-    var camAngleX = 0.0;
-    var camAngleY = 0.0;
+    var camera = quat.create();
+    var cameraAnimationSpeed = quat.fromValues(0, 3e-3 * Math.PI, 0, 0);
+    var cameraDeltaTemp = quat.create();
+    var trackBallPos = vec3.create();
+    var trackBallPosPrev = vec3.create();
 
-    var scene = new core.Scene(gl, {"bkColor": "#662222", transparentSteps: 2});
-    setCamera(scene, camDistance, camAngleX, camAngleY);
+    quat.calculateW(cameraAnimationSpeed, cameraAnimationSpeed);
+
+    var scene = new core.Scene(gl, {
+        bkColor: "#662222",
+        transparentSteps: 2,
+        distance: 600
+    });
     var animation = true;
     var simTrans = new utils.SimplexTransformation(200);
 
@@ -36,20 +35,24 @@ function init() {
     gl.captureMouse();
     gl.onmousemove = function(e) {
         if (e.dragging) {
-            animation = false;
-            scene.invalidate();
-
             if (!e.ctrlKey) {
-                camAngleX += e.deltay / 100.0;
-                camAngleY += e.deltax / 100.0;
-                setCamera(scene, camDistance, camAngleX, camAngleY);
+                scene.getTrackballPosition(trackBallPos, e.canvasx, e.canvasy);
+                quat.rotationTo(cameraDeltaTemp, trackBallPos, trackBallPosPrev);
+                quat.multiply(camera, camera, cameraDeltaTemp);
+                vec3.copy(trackBallPosPrev, trackBallPos);
+                scene.setCameraRotation(camera);
             } else {
             }
+
+            scene.invalidate();
         }
     }
 
     gl.onmousedown = function(e) {
+        animation = false;
         console.log(scene.getObjectId(e.canvasx, e.canvasy));
+        scene.getTrackballPosition(trackBallPos, e.canvasx, e.canvasy);
+        vec3.copy(trackBallPosPrev, trackBallPos);
     }
 
     // animation = false;
@@ -120,8 +123,8 @@ function init() {
     gl.onupdate = function(dt)
     {
         if (animation) {
-            camAngleY += dt * 0.4;
-            setCamera(scene, camDistance, camAngleX, camAngleY);
+            quat.rotateY(camera, camera, 0.4 * dt);
+            scene.setCameraRotation(camera);
             scene.invalidate();
         }
     };

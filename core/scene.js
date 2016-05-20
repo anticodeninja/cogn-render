@@ -10,6 +10,9 @@ var Scene = function(gl, options) {
     this.far = 1000;
     this.bkColor = utils.colorToArray(utils.expandDefault(options.bkColor, '#AA2222'));
     this.transparentSteps = utils.expandDefault(options.transparentSteps, 2);
+    this.distance = utils.expandDefault(options.distance, 600);
+    this.width = this.gl.canvas.width;
+    this.height = gl.canvas.height;
 
     this.outdated = true;
     this.objects = [];
@@ -18,10 +21,14 @@ var Scene = function(gl, options) {
     vec2.set(this.cameraAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
 
     this.proj = mat4.create();
-    mat4.perspective(this.proj, 45 * DEG2RAD, gl.canvas.width / gl.canvas.height, 0.0, this.far);
+    mat4.perspective(this.proj, 45 * DEG2RAD,  this.width / this.height, 0.0, this.far);
 
     this.view = mat4.create();
-    mat4.identity(this.view);
+    this.viewCenter = vec3.create();
+    this.viewEye = vec3.create();
+    this.viewUp = vec3.create();
+    this.cameraRotation = quat.create();
+    this.setCameraRotation(this.cameraRotation);
 
     this.mvp = mat4.create();
     this.temp = mat4.create();
@@ -51,8 +58,34 @@ Scene.prototype.addObject = function(obj) {
     obj.upload();
 }
 
-Scene.prototype.setCamera = function(pos, dir, up) {
-    mat4.lookAt(this.view, pos, dir, up);
+Scene.prototype.getCameraRotation = function(rotation) {
+    quat.copy(rotation, this.cameraRotation);
+}
+
+Scene.prototype.setCameraRotation = function(rotation) {
+    quat.copy(this.cameraRotation, rotation);
+    vec3.set(this.viewEye, 0, 0, -this.distance);
+    vec3.set(this.viewUp, 0, 1, 0);
+    vec3.transformQuat(this.viewEye, this.viewEye, rotation);
+    vec3.transformQuat(this.viewUp, this.viewUp, rotation);
+    mat4.lookAt(this.view, this.viewEye, this.viewCenter, this.viewUp);
+}
+
+Scene.prototype.getTrackballPosition = function(out, posX, posY) {
+    var length;
+
+    vec3.set(
+        out,
+        (posX - 0.5 * this.width) / (0.5 * this.width),
+        (0.5 * this.height - posY) / (0.5 * this.height),
+        0.0);
+    length = out[0] * out[0] + out[1] * out[1];
+
+    if (length > 1.0) {
+        vec3.normalize(out, out);
+    } else {
+        out[2] = Math.sqrt(1.0 - length);
+    }
 }
 
 Scene.prototype.invalidate = function() {

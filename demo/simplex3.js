@@ -1,8 +1,8 @@
 "use strict";
 
-var core = require("./core/main.js");
-var utils = require("./utils/main.js");
-var primitivies = require("./primitivies/main.js");
+var core = require("../core/main.js");
+var utils = require("../utils/main.js");
+var primitivies = require("../primitivies/main.js");
 
 function init() {
     var container = document.body;
@@ -28,31 +28,6 @@ function init() {
     });
 
     var simTrans = new utils.SimplexTransformation(200);
-    // console.log(scene.getObjectId(e.canvasx, e.canvasy));
-    // animation = false;
-    // new primitivies.PointMesh({ antialias: 10 })
-    //     .addPoint([  0, 0, 150], {color: "#333333ff", radius: 100, id: 1})
-    //     .addPoint([-10, 0, 100], {color: "#ff000080", radius: 100, id: 2})
-    //     .addPoint([ 0, 20, 200], {color: "#00ff0080", radius: 100, id: 3})
-    //     .addPoint([ 10, 0, 300], {color: "#0000ff80", radius: 100, id: 4})
-    //     .setScene(scene);
-
-    // animation = false;
-    // new primitivies.PointMesh({ antialias: 10 })
-    //     .addPoint([   0,   0, 100], {color: "#ff000080", radius: 100, id: 2})
-    //     .setScene(scene);
-    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": [40,10,10,10]}))
-    //     .addPoint([-200,   0, 0])
-    //     .addPoint([   0, 200, 100])
-    //     .addPoint([ 200,   0, 200])
-    //     .setScene(scene);
-    // new primitivies.LineMesh(({"color": "#000000", "thickness": 4, "pattern": [0]}))
-    //     .addPoint([ 200,    0, 0])
-    //     .addPoint([   0, -200, 100])
-    //     .addPoint([-200,    0, 200])
-    //     .setScene(scene);
-    // new primitivies.SimplexMesh(200, {"color": "#000000"})
-    //     .setScene(scene);
 
     new primitivies.PointMesh()
         .addPoint(simTrans.toPoint([6, 10, 40, 50]), {color: "#e01b1b", radius: 6, id: 1})

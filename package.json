@@ -4,9 +4,10 @@
   "description": "",
   "main": "bundle.js",
   "scripts": {
-    "debug": "webpack-dev-server --config webpack-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
-    "build": "webpack --config webpack-demo.config.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+      "simplex3-demo": "webpack-dev-server --config webpack-config/simplex3-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
+      "primitivies-demo": "webpack-dev-server --config webpack-config/primitivies-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
+      "build": "webpack --config webpack-demo.config.js",
+      "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Artyom Yamshanov",
   "license": "MIT",

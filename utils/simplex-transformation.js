@@ -6,7 +6,7 @@ SimplexTransformation.prototype.legKoef = 1 / Math.cos(Math.PI/6);
 
 var pAngles = {
     3: [
-        Math.PI / 3,
+        -Math.PI / 3,
         Math.PI
     ],
     4: [

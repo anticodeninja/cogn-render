@@ -2,7 +2,7 @@ var core = require("../core/main.js");
 var utils = require("../utils/main.js");
 var primitivies = require("../primitivies/main.js");
 
-var SimplexMesh = function(trans, options) {
+var SimplexPrismMesh = function(trans, options) {
     var i,
         temp,
         simTrans = trans;
@@ -10,12 +10,16 @@ var SimplexMesh = function(trans, options) {
     this.constructor.prototype.constructor.call(this, options);
 
     this.points = [
-        simTrans.toPoint([1, 0, 0, 0]),
-        simTrans.toPoint([0, 1, 0, 0]),
-        simTrans.toPoint([0, 0, 1, 0]),
-        simTrans.toPoint([0, 0, 0, 1]),
+        simTrans.toPoint([1, 0, 0, trans.minValue]),
+        simTrans.toPoint([0, 1, 0, trans.minValue]),
+        simTrans.toPoint([0, 0, 1, trans.minValue]),
+        simTrans.toPoint([1, 0, 0, trans.maxValue]),
+        simTrans.toPoint([0, 1, 0, trans.maxValue]),
+        simTrans.toPoint([0, 0, 1, trans.maxValue]),
     ];
     this.pointTransformed = [
+        vec3.create(),
+        vec3.create(),
         vec3.create(),
         vec3.create(),
         vec3.create(),
@@ -23,26 +27,31 @@ var SimplexMesh = function(trans, options) {
     ];
     this.lines = [
         [0, 1],
-        [0, 2],
-        [0, 3],
         [1, 2],
-        [2, 3],
-        [3, 1]
+        [2, 0],
+        [3, 4],
+        [4, 5],
+        [5, 3],
+        [0, 3],
+        [1, 4],
+        [2, 5]
     ];
     this.edgePoints = [
-        [0, 1, 2],
-        [0, 2, 3],
-        [0, 3, 1],
-        [1, 3, 2]
+        [0, 2, 1],
+        [3, 4, 5],
+        [0, 1, 3],
+        [1, 2, 4],
+        [2, 0, 5]
     ];
     this.edgeLines = [
-        [0, 3, 1],
-        [1, 4, 2],
-        [2, 5, 0],
-        [3, 4, 5]
+        [0, 1, 2],
+        [3, 4, 5],
+        [0, 3, 6, 7],
+        [1, 4, 7, 8],
+        [2, 5, 8, 6]
     ];
     this.front = [
-        true, true, true, true, true, true
+        true, true, true, true, true, true, true, true, true
     ]
 
     this.linesPrimitivies = [];
@@ -60,9 +69,9 @@ var SimplexMesh = function(trans, options) {
     }
 }
 
-SimplexMesh.prototype = Object.create(core.BaseMesh.prototype);
+SimplexPrismMesh.prototype = Object.create(core.BaseMesh.prototype);
 
-SimplexMesh.prototype.setOptions = function(options, initial) {
+SimplexPrismMesh.prototype.setOptions = function(options, initial) {
     if (options.color || initial) {
         this.color = utils.expandDefault(options.color, "#000000");
     }
@@ -90,7 +99,7 @@ SimplexMesh.prototype.setOptions = function(options, initial) {
     }
 }
 
-SimplexMesh.prototype.transform = function(mat)
+SimplexPrismMesh.prototype.transform = function(mat)
 {
     this.constructor.prototype.transform.call(this, mat);
     
@@ -130,7 +139,7 @@ SimplexMesh.prototype.transform = function(mat)
     this.upload();
 }
 
-SimplexMesh.prototype.setScene = function(scene) {
+SimplexPrismMesh.prototype.setScene = function(scene) {
     var i;
     
     this.constructor.prototype.setScene.call(this, scene);
@@ -142,4 +151,4 @@ SimplexMesh.prototype.setScene = function(scene) {
     return this;
 }
 
-module.exports = SimplexMesh;
+module.exports = SimplexPrismMesh;

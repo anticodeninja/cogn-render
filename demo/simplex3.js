@@ -66,7 +66,7 @@ function init() {
         .addPoint(simTrans.toPoint([50, 29, 19, 6]))
         .setScene(scene);
 
-    new primitivies.SimplexMesh(200, {"color": "#000000"})
+    new primitivies.SimplexMesh(simTrans, {"color": "#000000"})
         .setScene(scene);
 
     scene.draw();

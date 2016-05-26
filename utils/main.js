@@ -61,3 +61,5 @@ module.exports.expandDefault = expandDefault;
 module.exports.colorToArray = colorToArray;
 module.exports.generatePattern = generatePattern;
 module.exports.SimplexTransformation = require("./simplex-transformation.js")
+module.exports.LinearTransformation = require("./linear-transformation.js")
+module.exports.SimplexPrismTransformation = require("./simplex-prism-transformation.js")

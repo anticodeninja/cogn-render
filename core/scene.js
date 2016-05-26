@@ -8,6 +8,7 @@ var Scene = function(gl, options) {
     this.gl = gl;
 
     this.far = 1000;
+    this.debug = utils.expandDefault(options.debug, false);
     this.bkColor = utils.colorToArray(utils.expandDefault(options.bkColor, '#AA2222'));
     this.transparentSteps = utils.expandDefault(options.transparentSteps, 2);
     this.distance = utils.expandDefault(options.distance, 600);
@@ -174,8 +175,6 @@ Scene.prototype.drawHandler = function() {
         this.transparentLayers[transparentStep].fbo.unbind();
     }
 
-    var quad = GL.Mesh.getScreenQuad();
-
     this.gl.disable(gl.DEPTH_TEST);
     this.gl.enable(gl.BLEND);
     this.gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -185,12 +184,19 @@ Scene.prototype.drawHandler = function() {
     gl.drawTexture(this.opaqueLayer.color,
                    0, 0,
                    gl.canvas.width, gl.canvas.height);
+    
     for (transparentStep = this.transparentSteps - 1; transparentStep >= 0; --transparentStep) {
         gl.drawTexture(this.transparentLayers[transparentStep].color,
                        0, 0,
                        gl.canvas.width, gl.canvas.height);
     }
 
+    if (this.debug) {
+        this.drawDebugInformation();
+    }
+}
+
+Scene.prototype.drawDebugInformation = function() {
     gl.drawTexture(this.opaqueLayer.color,
                    0, 0,
                    gl.canvas.width * 0.2, gl.canvas.height * 0.2);

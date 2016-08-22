@@ -45,28 +45,32 @@ var mKoef = {
 
     // precalc 2-simplex
     for (i = 0; i < 2; ++i) {
-        pKoef[3].push([
-            Math.cos(pAngles[3][i]),
-            Math.sin(pAngles[3][i])
-        ]);
-        mKoef[3].push([
-            Math.cos(mAngles[3][i]),
-            Math.sin(mAngles[3][i])
-        ]);
+	pKoef[3].push([
+	    Math.cos(pAngles[3][i]),
+	    Math.sin(pAngles[3][i])
+	]);
+    }
+    for (i = 0; i < 3; ++i) {
+	mKoef[3].push([
+	    Math.cos(mAngles[3][i]),
+	    Math.sin(mAngles[3][i])
+	]);
     }
 
     // precalc 3-simplex
     for (i = 0; i < 3; ++i) {
-        pKoef[4].push([
-            Math.sin(pAngles[4][i][0]) * Math.cos(pAngles[4][i][1]),
-            Math.cos(pAngles[4][i][0]),
-            Math.sin(pAngles[4][i][0]) * Math.sin(pAngles[4][i][1])
-        ]);
-        mKoef[4].push([
-            Math.sin(mAngles[4][i][0]) * Math.cos(mAngles[4][i][1]),
-            Math.cos(mAngles[4][i][0]),
-            Math.sin(mAngles[4][i][0]) * Math.sin(mAngles[4][i][1])
-        ]);
+	mKoef[4].push([
+	    Math.sin(mAngles[4][i][0]) * Math.cos(mAngles[4][i][1]),
+	    Math.cos(mAngles[4][i][0]),
+	    Math.sin(mAngles[4][i][0]) * Math.sin(mAngles[4][i][1])
+	]);
+    }
+    for (i = 0; i < 4; ++i) {
+	mKoef[4].push([
+	    Math.sin(mAngles[4][i][0]) * Math.cos(mAngles[4][i][1]),
+	    Math.cos(mAngles[4][i][0]),
+	    Math.sin(mAngles[4][i][0]) * Math.sin(mAngles[4][i][1])
+	]);
     }
 })();
 
@@ -107,7 +111,7 @@ SimplexTransformation.prototype.toMedian = function(h) {
         path = [],
         h = this.normalize(h),
         koef = mKoef[h.length],
-        coord = new Float32Array(h.length - 1),
+        coord = this.toPoint(h),
         chunk;
 
     for (i = 0; i < h.length; ++i) {

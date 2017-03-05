@@ -75,6 +75,10 @@ OrbitalMouse.prototype.mouseMoveHandler = function(e) {
 }
 
 OrbitalMouse.prototype.mouseDownHandler = function(e) {
+    if (this.mouseMoveEvent !== 0) {
+        return;
+    }
+
     this.mouseMoveEvent = this.scene.onMouseMove.add(this.mouseMoveHandler.bind(this));
     this.scene.getTrackballPosition(this.current, e.canvasX, e.canvasY);
     vec3.copy(this.prev, this.current);

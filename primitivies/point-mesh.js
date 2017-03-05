@@ -1,7 +1,7 @@
 var core = require("../core/main.js");
 var utils = require("../utils/main.js");
-var vertShader = require("./point.vert");
-var fragShader = require("./point.frag");
+var vertShader = require("./shaders/point.vert");
+var fragShader = require("./shaders/point.frag");
 
 PointMesh = function(options) {
     this.constructor.prototype.constructor.call(this, options);
@@ -28,7 +28,9 @@ PointMesh = function(options) {
         a_id: null
     };
 
-    this.shader = new Shader(vertShader, fragShader);
+    this.shaderLayerId == null;
+    this.shaderLayerOpaque == null;
+    this.shaderLayerTransparent == null;
 }
 
 PointMesh.prototype = Object.create(core.BaseMesh.prototype);
@@ -64,33 +66,45 @@ PointMesh.prototype.addPoint = function(value, options)
 }
 
 PointMesh.prototype.upload = function() {
-    var i, j, right, top, radius, point, color, id;
+    var context = this.scene.context,
+        gl = context.gl,
+        i, j, right, top, radius, point, color, id;
 
     vertex = 6 * this.length;
 
+    if (this.shaderLayerId == null) {
+        this.shaderLayerId = new core.Shader(context, vertShader, fragShader, "#define LAYER_ID;");
+    }
+    if (this.shaderLayerOpaque == null) {
+        this.shaderLayerOpaque = new core.Shader(context, vertShader, fragShader, "#define LAYER_OPAQUE;");
+    }
+    if (this.shaderLayerTransparent == null) {
+        this.shaderLayerTransparent = new core.Shader(context, vertShader, fragShader, "#define LAYER_TRANSPARENT;");
+    }
+
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
         this.data.vertexes = new Float32Array(3 * vertex);
-        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
+        this.buffers.a_vertex = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.angles == null || (this.data.angles.length !== vertex)) {
         this.data.angles = new Float32Array(vertex);
-        this.buffers.a_angle = new GL.Buffer(gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW);
+        this.buffers.a_angle = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.positions == null || (this.data.positions.length !== 2 * vertex)) {
         this.data.positions = new Float32Array(2 * vertex);
-        this.buffers.a_position = new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
+        this.buffers.a_position = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.colors == null || (this.data.colors.length !== 4 * vertex)) {
         this.data.colors = new Float32Array(4 * vertex);
-        this.buffers.a_color = new GL.Buffer(gl.ARRAY_BUFFER, this.data.colors, 4, gl.DYNAMIC_DRAW);
+        this.buffers.a_color = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.colors, 4, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.ids == null || (this.data.ids.length !== 4 * vertex)) {
         this.data.ids = new Float32Array(4 * vertex);
-        this.buffers.a_id = new GL.Buffer(gl.ARRAY_BUFFER, this.data.ids, 4, gl.DYNAMIC_DRAW);
+        this.buffers.a_id = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.ids, 4, gl.DYNAMIC_DRAW);
     }
 
     for (i = 0; i < this.length; ++i) {
@@ -131,7 +145,22 @@ PointMesh.prototype.upload = function() {
 }
 
 PointMesh.prototype.draw = function(step) {
-    this.shader.uniforms({
+    var gl = this.scene.context.gl,
+        shader;
+
+    if (step == core.Context.LAYER_ID) {
+        shader = this.shaderLayerId;
+    } else if (step == core.Context.LAYER_OPAQUE) {
+        shader = this.shaderLayerOpaque;
+    } else if (step == core.Context.LAYER_TRANSPARENT) {
+        shader = this.shaderLayerTransparent;
+    }
+
+    if (!shader) {
+        return;
+    }
+    
+    shader.uniforms({
         u_mvp: this.mvp,
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
@@ -139,7 +168,6 @@ PointMesh.prototype.draw = function(step) {
         u_opaque: 0,
         u_prev: 1,
 
-        u_step: step,
         u_thickness: this.thickness,
         u_antialias: this.antialias
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);

@@ -1,28 +1,28 @@
 var utils = require("../utils/main.js");
 var core = require("../core/main.js");
 
-var Scene = function(gl, options) {
+var Scene = function(context, options) {
     var i;
     options = options || {};
 
-    this.gl = gl;
+    this.context = context;
 
     this.far = 1000;
     this.debug = utils.expandDefault(options.debug, false);
     this.bkColor = utils.colorToArray(utils.expandDefault(options.bkColor, '#AA2222'));
     this.transparentSteps = utils.expandDefault(options.transparentSteps, 2);
     this.distance = utils.expandDefault(options.distance, 600);
-    this.width = this.gl.canvas.width;
-    this.height = gl.canvas.height;
+    this.width = this.context.canvas.width;
+    this.height = this.context.canvas.height;
 
     this.outdated = true;
     this.objects = [];
 
     this.cameraAspect = vec2.create();
-    vec2.set(this.cameraAspect, 2 / gl.canvas.width, 2 / gl.canvas.height);
+    vec2.set(this.cameraAspect, 2 / this.context.canvas.width, 2 / this.context.canvas.height);
 
     this.proj = mat4.create();
-    mat4.perspective(this.proj, 45 * DEG2RAD,  this.width / this.height, 0.0, this.far);
+    mat4.perspective(this.proj, 45 * core.Context.DEG2RAD,  this.width / this.height, 0.0, this.far);
 
     this.view = mat4.create();
     this.viewCenter = vec3.create();
@@ -36,25 +36,21 @@ var Scene = function(gl, options) {
     this.mvp = mat4.create();
     this.temp = mat4.create();
 
-    this.opaqueLayer = new core.RenderingLayer(gl, true);
-    this.idLayer = new core.RenderingLayer(gl, false);
+    this.opaqueLayer = new core.RenderingLayer(this.context, true);
+    this.idLayer = new core.RenderingLayer(this.context, false);
     this.transparentLayers = new Array(this.transparentLayers);
-    for (i = 0; i<this.transparentSteps; ++i) {
-        this.transparentLayers[i] = new core.RenderingLayer(gl, true);
+    for (i = 0; i <= this.transparentSteps; ++i) { // transparentSteps + 1
+        this.transparentLayers[i] = new core.RenderingLayer(this.context, true);
     }
 
-    this.onUpdate = new core.Event();
-    this.onMouseDown = new core.Event();
-    this.onMouseMove = new core.Event();
-    this.onMouseUp = new core.Event();
+    this.onUpdate = this.context.onUpdate;
+    this.context.onDraw.add(this.drawHandler.bind(this));
 
-    this.gl.ondraw = this.drawHandler.bind(this);
-    this.gl.onupdate = this.updateHandler.bind(this);
-    this.gl.onmousedown = this.mouseDownHandler.bind(this);
-    this.gl.onmousemove = this.mouseMoveHandler.bind(this);
-    this.gl.onmouseup = this.mouseUpHandler.bind(this);
+    this.onMouseDown = this.context.onMouseDown;
+    this.onMouseMove = this.context.onMouseMove;
+    this.onMouseUp = this.context.onMouseUp;
 
-    this.gl.captureMouse();
+    this.context.captureMouse();
 }
 
 Scene.prototype.getObjectId = function(posX, posY) {
@@ -116,7 +112,7 @@ Scene.prototype.getTrackballPosition = function(out, posX, posY) {
 }
 
 Scene.prototype.draw = function() {
-    this.gl.ondraw();
+    this.context.onDraw.fire();
 }
 
 Scene.prototype.invalidate = function() {
@@ -124,7 +120,8 @@ Scene.prototype.invalidate = function() {
 }
 
 Scene.prototype.drawHandler = function() {
-    var i = 0,
+    var gl = this.context.gl,
+        i = 0,
         transparentStep = 0;
 
     if (!this.outdated) {
@@ -138,57 +135,58 @@ Scene.prototype.drawHandler = function() {
     }
 
     // Opaque and Id Layer Rendering
-    this.gl.enable(gl.DEPTH_TEST);
-    this.gl.depthFunc(gl.LEQUAL);
-    this.gl.disable(gl.BLEND);
-    this.gl.clearDepth(1.0);
-    this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+    gl.disable(gl.BLEND);
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LESS);
+    gl.clearDepth(1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
     this.idLayer.fbo.bind(true);
-    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     for (var i=0; i<this.objects.length; ++i) {
-        this.objects[i].draw(0);
+        this.objects[i].draw(core.Context.LAYER_ID);
     }
     this.idLayer.fbo.unbind();
 
     this.opaqueLayer.fbo.bind(true);
-    this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     for (i = 0; i<this.objects.length; ++i) {
-        this.objects[i].draw(1);
+        this.objects[i].draw(core.Context.LAYER_OPAQUE);
     }
     this.opaqueLayer.fbo.unbind();
 
     // Transparent Layers Rendering
-    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
+    this.transparentLayers[0].fbo.bind(true);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.transparentLayers[0].fbo.unbind();
+    
+    for (transparentStep = 1; transparentStep <= this.transparentSteps; ++transparentStep) {
         this.transparentLayers[transparentStep].fbo.bind(true);
-        this.gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        
         this.opaqueLayer.depth.bind(0);
-        if (transparentStep > 0) {
-            this.transparentLayers[transparentStep - 1].depth.bind(1);
-        }
+        this.transparentLayers[transparentStep - 1].depth.bind(1);
 
         for (var i=0; i<this.objects.length; ++i) {
-            this.objects[i].draw(2 + transparentStep);
+            this.objects[i].draw(core.Context.LAYER_TRANSPARENT);
         }
-
         this.transparentLayers[transparentStep].fbo.unbind();
     }
 
-    this.gl.disable(gl.DEPTH_TEST);
-    this.gl.enable(gl.BLEND);
-    this.gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    this.gl.clearColor(this.bkColor[0], this.bkColor[1], this.bkColor[2], this.bkColor[3]);
-    this.gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.clearColor(this.bkColor[0], this.bkColor[1], this.bkColor[2], this.bkColor[3]);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.drawTexture(this.opaqueLayer.color,
-                   0, 0,
-                   gl.canvas.width, gl.canvas.height);
+    this.context.drawTexture(this.opaqueLayer.color,
+                             0, 0,
+                             gl.canvas.width, gl.canvas.height);
     
-    for (transparentStep = this.transparentSteps - 1; transparentStep >= 0; --transparentStep) {
-        gl.drawTexture(this.transparentLayers[transparentStep].color,
-                       0, 0,
-                       gl.canvas.width, gl.canvas.height);
+    for (transparentStep = this.transparentSteps; transparentStep > 0; --transparentStep) {
+        this.context.drawTexture(this.transparentLayers[transparentStep].color,
+                                 0, 0,
+                                 this.context.canvas.width, this.context.canvas.height);
     }
 
     if (this.debug) {
@@ -197,44 +195,28 @@ Scene.prototype.drawHandler = function() {
 }
 
 Scene.prototype.drawDebugInformation = function() {
-    gl.drawTexture(this.opaqueLayer.color,
-                   0, 0,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.opaqueLayer.depth,
-                   0, gl.canvas.height * 0.8,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+    this.context.drawTexture(this.opaqueLayer.color,
+                             0, 0,
+                             this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
+    this.context.drawTexture(this.opaqueLayer.depth,
+                             0, this.context.canvas.height * 0.8,
+                             this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
 
-    gl.drawTexture(this.idLayer.color,
-                   gl.canvas.width * 0.8, 0,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-    gl.drawTexture(this.idLayer.depth,
-                   gl.canvas.width * 0.8, gl.canvas.height * 0.8,
-                   gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+    this.context.drawTexture(this.idLayer.color,
+                             this.context.canvas.width * 0.8, 0,
+                             this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
+    this.context.drawTexture(this.idLayer.depth,
+                             this.context.canvas.width * 0.8, this.context.canvas.height * 0.8,
+                             this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
 
-    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
-        gl.drawTexture(this.transparentLayers[transparentStep].color,
-                       gl.canvas.width * 0.2 * (1 + transparentStep), 0,
-                       gl.canvas.width * 0.2, gl.canvas.height * 0.2);
-        gl.drawTexture(this.transparentLayers[transparentStep].depth,
-                       gl.canvas.width * 0.2 * (1 + transparentStep), gl.canvas.height * 0.8,
-                       gl.canvas.width * 0.2, gl.canvas.height * 0.2);
+    for (transparentStep = 1; transparentStep <= this.transparentSteps; ++transparentStep) {
+        this.context.drawTexture(this.transparentLayers[transparentStep].color,
+                                 this.context.canvas.width * 0.2 * transparentStep, 0,
+                                 this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
+        this.context.drawTexture(this.transparentLayers[transparentStep].depth,
+                                 this.context.canvas.width * 0.2 * transparentStep, this.context.canvas.height * 0.8,
+                                 this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
     }
-}
-
-Scene.prototype.updateHandler = function(dt) {
-    this.onUpdate.fire(dt);
-}
-
-Scene.prototype.mouseDownHandler = function(e) {
-    this.onMouseDown.fire(e);
-}
-
-Scene.prototype.mouseMoveHandler = function(e) {
-    this.onMouseMove.fire(e);
-}
-
-Scene.prototype.mouseUpHandler = function(e) {
-    this.onMouseUp.fire(e);
 }
 
 module.exports = Scene;

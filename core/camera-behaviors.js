@@ -17,11 +17,11 @@ AutoRotating.prototype.attach = function(scene) {
     
     this.updateEvent = this.scene.onUpdate.add(this.updateHandler.bind(this));
 
-    this.scene.gl.animate(true);
+    this.scene.context.animate(true);
 }
 
 AutoRotating.prototype.detach = function(scene) {
-    this.scene.gl.animate(false);
+    this.scene.context.animate(false);
     
     this.scene.onUpdate.remove(this.updateEvent);
 
@@ -60,13 +60,13 @@ OrbitalMouse.prototype.detach = function(scene) {
     this.scene.onMouseUp.remove(this.mouseUpEvent);
     this.scene.onMouseMove.remove(this.mouseMoveEvent);
 
-    this.mouseMoveEvent = 0;
+    this.mouseUpEvent = 0;
     this.mouseDownEvent = 0;
     this.mouseMoveEvent = 0;
 }
 
 OrbitalMouse.prototype.mouseMoveHandler = function(e) {
-    this.scene.getTrackballPosition(this.current, e.canvasx, e.canvasy);
+    this.scene.getTrackballPosition(this.current, e.canvasX, e.canvasY);
     quat.rotationTo(this.delta, this.current, this.prev);
     quat.multiply(this.camera, this.camera, this.delta);
     this.scene.setCameraRotation(this.camera);
@@ -76,7 +76,7 @@ OrbitalMouse.prototype.mouseMoveHandler = function(e) {
 
 OrbitalMouse.prototype.mouseDownHandler = function(e) {
     this.mouseMoveEvent = this.scene.onMouseMove.add(this.mouseMoveHandler.bind(this));
-    this.scene.getTrackballPosition(this.current, e.canvasx, e.canvasy);
+    this.scene.getTrackballPosition(this.current, e.canvasX, e.canvasY);
     vec3.copy(this.prev, this.current);
 }
 

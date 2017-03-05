@@ -1,7 +1,7 @@
 var core = require("../core/main.js");
 var utils = require("../utils/main.js");
-var vertShader = require("./line.vert");
-var fragShader = require("./line.frag");
+var vertShader = require("./shaders/line.vert");
+var fragShader = require("./shaders/line.frag");
 
 var LineMesh = function(options) {
     this.constructor.prototype.constructor.call(this, options);
@@ -28,7 +28,8 @@ var LineMesh = function(options) {
         a_position: null
     };
 
-    this.shader = new Shader(vertShader, fragShader);
+    this.shaderLayerOpaque = null;
+    this.shaderLayerTransparent = null;
 }
 
 LineMesh.prototype = Object.create(core.BaseMesh.prototype);
@@ -100,33 +101,43 @@ LineMesh.prototype.transform = function(mat)
 }
 
 LineMesh.prototype.upload = function() {
-    var i, j, right, top, point;
+    var context = this.scene.context,
+        gl = context.gl,
+        i, j, right, top, point;
 
     vertex = 6 * (this.length - 1);
 
+    if (this.shaderLayerOpaque == null) {
+        this.shaderLayerOpaque = new core.Shader(context, vertShader, fragShader, "#define LAYER_OPAQUE;");
+    }
+
+    if (this.shaderLayerTransparent == null) {
+        this.shaderLayerTransparent = new core.Shader(context, vertShader, fragShader, "#define LAYER_TRANSPARENT;");
+    }
+
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
         this.data.vertexes = new Float32Array(3 * vertex);
-        this.buffers.a_vertex = new GL.Buffer(gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.STATIC_DRAW);
+        this.buffers.a_vertex = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.vertexes, 3, gl.STATIC_DRAW);
     }
 
     if (this.data.angles == null || (this.data.angles.length !== vertex)) {
         this.data.angles = new Float32Array(vertex);
-        this.buffers.a_angle = new GL.Buffer(gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW);
+        this.buffers.a_angle = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.angles, 1, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.lengths == null || (this.data.lengths.length !== vertex)) {
         this.data.lengths = new Float32Array(vertex);
-        this.buffers.a_length = new GL.Buffer(gl.ARRAY_BUFFER, this.data.lengths, 1, gl.DYNAMIC_DRAW);
+        this.buffers.a_length = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.lengths, 1, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.offsets == null || (this.data.offsets.length !== vertex)) {
         this.data.offsets = new Float32Array(vertex);
-        this.buffers.a_offset = new GL.Buffer(gl.ARRAY_BUFFER, this.data.offsets, 1, gl.DYNAMIC_DRAW);
+        this.buffers.a_offset = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.offsets, 1, gl.DYNAMIC_DRAW);
     }
 
     if (this.data.positions == null || (this.data.positions.length !== 2 * vertex)) {
         this.data.positions = new Float32Array(2 * vertex);
-        this.buffers.a_position = new GL.Buffer(gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
+        this.buffers.a_position = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
     }
 
     for (i = 0; i < this.length - 1; ++i) {
@@ -157,7 +168,20 @@ LineMesh.prototype.upload = function() {
 }
 
 LineMesh.prototype.draw = function(step) {
-    this.shader.uniforms({
+    var gl = this.scene.context.gl,
+        shader;
+
+    if (step == core.Context.LAYER_OPAQUE) {
+        shader = this.shaderLayerOpaque;
+    } else if (step == core.Context.LAYER_TRANSPARENT) {
+        shader = this.shaderLayerTransparent;
+    }
+
+    if (!shader) {
+        return;
+    }
+    
+    shader.uniforms({
         u_mvp: this.mvp,
         u_aspect: this.scene.cameraAspect,
         u_far: this.scene.far,
@@ -166,7 +190,6 @@ LineMesh.prototype.draw = function(step) {
         u_prev: 1,
 
         u_color: this.color,
-        u_step: step,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
         u_pattern: this.pattern

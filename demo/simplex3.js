@@ -7,15 +7,15 @@ var primitivies = require("../primitivies/main.js");
 function init() {
     var container = document.body;
 
-    var gl = GL.create({
+    var context = new core.Context({
         width: container.offsetWidth,
         height: container.offsetHeight,
         antialias: false
     });
     
-    container.appendChild(gl.canvas);
+    container.appendChild(context.canvas);
 
-    var scene = new core.Scene(gl, {
+    var scene = new core.Scene(context, {
         bkColor: "#662222",
         transparentSteps: 2,
         distance: 600

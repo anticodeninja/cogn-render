@@ -39,7 +39,7 @@ var Scene = function(context, options) {
     this.opaqueLayer = new core.RenderingLayer(this.context, true);
     this.idLayer = new core.RenderingLayer(this.context, false);
     this.transparentLayers = new Array(this.transparentLayers);
-    for (i = 0; i <= this.transparentSteps; ++i) { // transparentSteps + 1
+    for (i = 0; i < this.transparentSteps; ++i) {
         this.transparentLayers[i] = new core.RenderingLayer(this.context, true);
     }
 
@@ -122,7 +122,8 @@ Scene.prototype.invalidate = function() {
 Scene.prototype.drawHandler = function() {
     var gl = this.context.gl,
         i = 0,
-        transparentStep = 0;
+        transparentStep = 0,
+        transparentStepMode;
 
     if (!this.outdated) {
         return;
@@ -143,7 +144,7 @@ Scene.prototype.drawHandler = function() {
 
     this.idLayer.fbo.bind(true);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    for (var i=0; i<this.objects.length; ++i) {
+    for (i = 0; i<this.objects.length; ++i) {
         this.objects[i].draw(core.Context.LAYER_ID);
     }
     this.idLayer.fbo.unbind();
@@ -155,20 +156,21 @@ Scene.prototype.drawHandler = function() {
     }
     this.opaqueLayer.fbo.unbind();
 
-    // Transparent Layers Rendering
-    this.transparentLayers[0].fbo.bind(true);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    this.transparentLayers[0].fbo.unbind();
-    
-    for (transparentStep = 1; transparentStep <= this.transparentSteps; ++transparentStep) {
+    // Transparent Layers Rendering    
+    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {        
         this.transparentLayers[transparentStep].fbo.bind(true);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         
         this.opaqueLayer.depth.bind(0);
-        this.transparentLayers[transparentStep - 1].depth.bind(1);
+        if (transparentStep == 0) {
+            transparentStepMode = core.Context.LAYER_TRANSPARENT;
+        } else {
+            this.transparentLayers[transparentStep - 1].depth.bind(1);
+            transparentStepMode = core.Context.LAYER_TRANSPARENT_SUPPLEMENTAL;
+        }
 
         for (var i=0; i<this.objects.length; ++i) {
-            this.objects[i].draw(core.Context.LAYER_TRANSPARENT);
+            this.objects[i].draw(transparentStepMode);
         }
         this.transparentLayers[transparentStep].fbo.unbind();
     }
@@ -183,7 +185,7 @@ Scene.prototype.drawHandler = function() {
                              0, 0,
                              gl.canvas.width, gl.canvas.height);
     
-    for (transparentStep = this.transparentSteps; transparentStep > 0; --transparentStep) {
+    for (transparentStep = this.transparentSteps - 1; transparentStep >= 0; --transparentStep) {
         this.context.drawTexture(this.transparentLayers[transparentStep].color,
                                  0, 0,
                                  this.context.canvas.width, this.context.canvas.height);
@@ -209,12 +211,12 @@ Scene.prototype.drawDebugInformation = function() {
                              this.context.canvas.width * 0.8, this.context.canvas.height * 0.8,
                              this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
 
-    for (transparentStep = 1; transparentStep <= this.transparentSteps; ++transparentStep) {
+    for (transparentStep = 0; transparentStep < this.transparentSteps; ++transparentStep) {
         this.context.drawTexture(this.transparentLayers[transparentStep].color,
-                                 this.context.canvas.width * 0.2 * transparentStep, 0,
+                                 this.context.canvas.width * 0.2 * (transparentStep + 1), 0,
                                  this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
         this.context.drawTexture(this.transparentLayers[transparentStep].depth,
-                                 this.context.canvas.width * 0.2 * transparentStep, this.context.canvas.height * 0.8,
+                                 this.context.canvas.width * 0.2 * (transparentStep + 1), this.context.canvas.height * 0.8,
                                  this.context.canvas.width * 0.2, this.context.canvas.height * 0.2);
     }
 }

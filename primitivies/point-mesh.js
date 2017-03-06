@@ -28,9 +28,10 @@ PointMesh = function(options) {
         a_id: null
     };
 
-    this.shaderLayerId == null;
-    this.shaderLayerOpaque == null;
-    this.shaderLayerTransparent == null;
+    this.shaderLayerId = null;
+    this.shaderLayerOpaque = null;
+    this.shaderLayerTransparent = null;
+    this.shaderLayerTransparentSupplemental = null;
 }
 
 PointMesh.prototype = Object.create(core.BaseMesh.prototype);
@@ -73,13 +74,20 @@ PointMesh.prototype.upload = function() {
     vertex = 6 * this.length;
 
     if (this.shaderLayerId == null) {
-        this.shaderLayerId = new core.Shader(context, vertShader, fragShader, "#define LAYER_ID;");
+        this.shaderLayerId = new core.Shader(
+            context, vertShader, fragShader, "#define LAYER_ID;");
     }
     if (this.shaderLayerOpaque == null) {
-        this.shaderLayerOpaque = new core.Shader(context, vertShader, fragShader, "#define LAYER_OPAQUE;");
+        this.shaderLayerOpaque = new core.Shader(
+            context, vertShader, fragShader, "#define LAYER_OPAQUE;");
     }
     if (this.shaderLayerTransparent == null) {
-        this.shaderLayerTransparent = new core.Shader(context, vertShader, fragShader, "#define LAYER_TRANSPARENT;");
+        this.shaderLayerTransparent = new core.Shader(
+            context, vertShader, fragShader, "#define LAYER_TRANSPARENT;");
+    }
+    if (this.shaderLayerTransparentSupplemental == null) {
+        this.shaderLayerTransparentSupplemental = new core.Shader(
+            context, vertShader, fragShader, "#define LAYER_TRANSPARENT;\n#define LAYER_TRANSPARENT_SUPPLEMENTAL;");
     }
 
     if (this.data.vertexes == null || (this.data.vertexes.length !== 3 * vertex)) {
@@ -154,6 +162,8 @@ PointMesh.prototype.draw = function(step) {
         shader = this.shaderLayerOpaque;
     } else if (step == core.Context.LAYER_TRANSPARENT) {
         shader = this.shaderLayerTransparent;
+    } else if (step == core.Context.LAYER_TRANSPARENT_SUPPLEMENTAL) {
+        shader = this.shaderLayerTransparentSupplemental;
     }
 
     if (!shader) {

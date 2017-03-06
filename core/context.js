@@ -601,6 +601,7 @@ Context.EPSILON = 0.000001;
 Context.LAYER_ID = 1;
 Context.LAYER_OPAQUE = 100;
 Context.LAYER_TRANSPARENT = 200;
+Context.LAYER_TRANSPARENT_SUPPLEMENTAL = 201;
 
 var __identity = mat3.create();
 var __pos = vec2.create();

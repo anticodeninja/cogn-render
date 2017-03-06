@@ -4,7 +4,9 @@ uniform float u_antialias;
 uniform float u_thickness;
 
 uniform sampler2D u_opaque;
+#ifdef LAYER_TRANSPARENT_SUPPLEMENTAL
 uniform sampler2D u_prev;
+#endif // LAYER_TRANSPARENT_SUPPLEMENTAL
 uniform vec2 u_aspect;
 
 varying float v_radius;
@@ -17,8 +19,10 @@ void main() {
     vec2 texPos = (gl_FragCoord.xy * u_aspect / 2.0);
     float opaqueDepth = texture2D(u_opaque, texPos).r;
     if (gl_FragCoord.z > opaqueDepth) { discard; return; };
+#ifdef LAYER_TRANSPARENT_SUPPLEMENTAL
     float prevDepth = texture2D(u_prev, texPos).r;
-    if (prevDepth != 1.0 && gl_FragCoord.z <= prevDepth) { discard; return; };
+    if (gl_FragCoord.z <= prevDepth) { discard; return; };
+#endif // LAYER_TRANSPARENT_SUPPLEMENTAL
 #endif // LAYER_TRANSPARENT
 
     float full_radius = v_radius + u_thickness;

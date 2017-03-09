@@ -5,6 +5,7 @@
   "main": "bundle.js",
   "scripts": {
       "simplex3-demo": "webpack-dev-server --config webpack-config/simplex3-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
+      "simplex2-demo": "webpack-dev-server --config webpack-config/simplex2-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
       "simplex-prism-demo": "webpack-dev-server --config webpack-config/simplex-prism-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
       "primitivies-demo": "webpack-dev-server --config webpack-config/primitivies-demo.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",
       "multiple-contexts": "webpack-dev-server --config webpack-config/multiple-contexts.config.js --host 0.0.0.0 --port 8080 --watch --progress --colors",

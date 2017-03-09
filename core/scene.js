@@ -14,6 +14,7 @@ var Scene = function(context, options) {
     this.distance = utils.expandDefault(options.distance, 600);
     this.width = this.context.canvas.width;
     this.height = this.context.canvas.height;
+    this.projection = utils.expandDefault(options.projection, 'perspective');
 
     this.outdated = true;
     this.objects = [];
@@ -22,13 +23,17 @@ var Scene = function(context, options) {
     vec2.set(this.cameraAspect, 2 / this.context.canvas.width, 2 / this.context.canvas.height);
 
     this.proj = mat4.create();
-    mat4.perspective(this.proj, 45 * core.Context.DEG2RAD,  this.width / this.height, 0.0, this.far);
-
     this.view = mat4.create();
-    this.viewCenter = vec3.create();
+    this.cameraPosition = vec3.create();
     this.viewEye = vec3.create();
     this.viewUp = vec3.create();
     this.cameraRotation = quat.create();
+
+    if (this.projection == 'perspective') {
+        mat4.perspective(this.proj, 45 * core.Context.DEG2RAD, this.width / this.height, 0.0, this.far);
+    } else {
+        this.setCameraZoom(utils.expandDefault(options.zoom, 1.0));
+    }
     this.setCameraRotation(this.cameraRotation);
 
     this.cameraBehavior = null;
@@ -49,8 +54,9 @@ var Scene = function(context, options) {
     this.onMouseDown = this.context.onMouseDown;
     this.onMouseMove = this.context.onMouseMove;
     this.onMouseUp = this.context.onMouseUp;
+    this.onMouseWheel = this.context.onMouseWheel;
 
-    this.context.captureMouse();
+    this.context.captureMouse(true);
 }
 
 Scene.prototype.getObjectId = function(posX, posY) {
@@ -86,11 +92,41 @@ Scene.prototype.getCameraRotation = function(rotation) {
 
 Scene.prototype.setCameraRotation = function(rotation) {
     quat.copy(this.cameraRotation, rotation);
+    this.__updateCamera();
+}
+
+Scene.prototype.getCameraPosition = function(position) {
+    vec3.copy(position, this.cameraPosition);
+}
+
+Scene.prototype.setCameraPosition = function(position) {
+    vec3.copy(this.cameraPosition, position);
+    this.__updateCamera();
+}
+
+Scene.prototype.getCameraZoom = function() {
+    return this.zoom;
+}
+
+Scene.prototype.setCameraZoom = function(zoom) {
+    var koef;
+    
+    this.zoom = zoom;
+    koef = this.zoom / 2.0;
+    
+    mat4.ortho(this.proj, -this.width * koef, this.width * koef, -this.height * koef, this.height * koef, 0.0, this.far);
+    this.__updateCamera();
+}
+
+Scene.prototype.__updateCamera = function() {
     vec3.set(this.viewEye, 0, 0, -this.distance);
+    vec3.transformQuat(this.viewEye, this.viewEye, this.cameraRotation);
+    vec3.add(this.viewEye, this.viewEye, this.cameraPosition);
+    
     vec3.set(this.viewUp, 0, 1, 0);
-    vec3.transformQuat(this.viewEye, this.viewEye, rotation);
-    vec3.transformQuat(this.viewUp, this.viewUp, rotation);
-    mat4.lookAt(this.view, this.viewEye, this.viewCenter, this.viewUp);
+    vec3.transformQuat(this.viewUp, this.viewUp, this.cameraRotation);
+
+    mat4.lookAt(this.view, this.viewEye, this.cameraPosition, this.viewUp);
     this.invalidate();
 }
 

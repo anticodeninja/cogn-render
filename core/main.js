@@ -7,4 +7,8 @@ module.exports.Shader = require("./shader.js");
 module.exports.FBO = require("./fbo.js");
 module.exports.RenderingLayer = require("./rendering-layer.js");
 module.exports.BaseMesh = require("./base-mesh.js");
-module.exports.cameraBehaviors = require("./camera-behaviors.js");
+module.exports.cameraBehaviors = {
+    AutoRotating: require("./camera-behaviors/auto-rotating.js"),
+    OrbitalMouse: require("./camera-behaviors/orbital-mouse.js"),
+    FlatMouse: require("./camera-behaviors/flat-mouse.js")
+}

@@ -18,10 +18,10 @@ void main() {
 #ifdef LAYER_TRANSPARENT
     vec2 texPos = (gl_FragCoord.xy * u_aspect / 2.0);
     float opaqueDepth = texture2D(u_opaque, texPos).r;
-    if (gl_FragCoord.z > opaqueDepth) { discard; return; };
+    if (gl_FragCoord.z >= opaqueDepth) { discard; return; };
 #ifdef LAYER_TRANSPARENT_SUPPLEMENTAL
     float prevDepth = texture2D(u_prev, texPos).r;
-    if (gl_FragCoord.z <= prevDepth) { discard; return; };
+    if (gl_FragCoord.z < prevDepth) { discard; return; };
 #endif // LAYER_TRANSPARENT_SUPPLEMENTAL
 #endif // LAYER_TRANSPARENT
 

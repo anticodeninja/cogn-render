@@ -3,14 +3,17 @@ var utils = require("../utils/main.js");
 var vertShader = require("./shaders/line.vert");
 var fragShader = require("./shaders/line.frag");
 
-var LineMesh = function(options) {
+var SimplexDistanceMesh = function(trans, options) {
     this.constructor.prototype.constructor.call(this, options);
 
+    this.trans = trans;
+    this.flatRender = options.flatRender;
     this.length = 0;
+    this.edges = this.flatRender ? 3 : 4;
+    this.colors = [];
     this.points = [];
     this.angles = [];
     this.lengths = [];
-    this.offsets = [];
 
     this.data = {
         vertexes: null,
@@ -35,20 +38,21 @@ var LineMesh = function(options) {
     this.shaderLayerTransparentSupplemental = null;
 }
 
-LineMesh.prototype = Object.create(core.BaseMesh.prototype);
+SimplexDistanceMesh.prototype = Object.create(core.BaseMesh.prototype);
 
-LineMesh.prototype.setOptions = function(options, initial)
-{   
-    if (options.color || initial) {
-        this.color = utils.colorToArray(utils.expandDefault(options.color, "#000000"));
+SimplexDistanceMesh.prototype.setOptions = function(options, initial)
+{
+    var i;
+    
+    if (options.colors || initial) {
+        this.lineColors = [];
+        for (i = 0; i < options.colors.length; ++i) {
+            this.lineColors.push(utils.colorToArray(options.colors[i]));
+        }
     }
 
     if (options.thickness || initial) {
         this.thickness = utils.expandDefault(options.thickness, 3);
-    }
-
-    if (options.pattern || initial) {
-        this.pattern = utils.generatePattern(utils.expandDefault(options.pattern, [50, 10]));
     }
 
     if (options.antialias || initial) {
@@ -58,58 +62,67 @@ LineMesh.prototype.setOptions = function(options, initial)
     return this;
 }
 
-LineMesh.prototype.addPoint = function(value)
+SimplexDistanceMesh.prototype.addPoint = function(value)
 {
+    var i, j,
+        point, temp,
+        mul = 1 / (this.edges - 1),
+        convert = function(p) {
+            return this.flatRender
+                ? this.flatRender.to3D(this.trans.toPoint(p))
+                : this.trans.toPoint(p);
+        }.bind(this);
+    
     this.length += 1;
-    this.points.push(vec3.clone(value));
-    this.angles.push(0);
-    this.lengths.push(0);
-    this.offsets.push(0);
+
+    this.points.push(convert(value));
+    for (i = 0; i < this.edges; ++i) {
+        point = (this.flatRender ? vec3 : vec4).clone(value);
+        temp = point[i];
+        for (j = 0; j < this.edges; ++j) {
+            point[j] += temp * (i != j ? mul : -1);
+        }
+        this.points.push(convert(point));
+        this.angles.push(0);
+        this.lengths.push(0);
+    }
 
     return this;
 }
 
-LineMesh.prototype.transform = function(mat)
+SimplexDistanceMesh.prototype.transform = function(mat)
 {
     this.constructor.prototype.transform.call(this, mat);
 
-    var i,
-        prev = vec3.create(),
-        next = vec3.create(),
+    var i, j,
+        mult = this.edges + 1,
+        base = vec3.create(),
+        point = vec3.create(),
         temp = vec2.create();
 
-    if (this.length < 2) {
-        throw ("number of points is not enough to draw line");
-    }
+    for (i = 0; i < this.length; ++i) {
+        vec3.transformMat4(base, this.points[mult * i], mat);
 
-    this.lengths[0] = 0.0;
-    this.offsets[0] = 0.0;
-    this.angles[this.length - 1] = 0.0;
-
-    vec3.transformMat4(prev, this.points[0], mat);
-    for (i = 1; i < this.length; ++i) {
-        vec3.transformMat4(next, this.points[i], mat);
-        vec2.set(temp,
-                 (next[0] - prev[0]) / this.scene.cameraAspect[0],
-                 (next[1] - prev[1]) / this.scene.cameraAspect[1]);
-
-        this.lengths[i] = Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
-        this.offsets[i] = this.offsets[i - 1] + this.lengths[i];
-        this.angles[i - 1] = Math.atan2(temp[1], temp[0]);
-
-        vec3.copy(prev, next);
+        for (j = 0; j < this.edges; ++j) {
+            vec3.transformMat4(point, this.points[mult * i + j + 1], mat);
+            vec2.set(temp,
+                     (point[0] - base[0]) / this.scene.cameraAspect[0],
+                     (point[1] - base[1]) / this.scene.cameraAspect[1]);
+            this.lengths[this.edges * i + j] = Math.sqrt(temp[0]*temp[0] + temp[1]*temp[1]);
+            this.angles[this.edges * i + j] = Math.atan2(temp[1], temp[0]);
+        }
     }
 
     this.upload();
 }
 
-LineMesh.prototype.upload = function() {
+SimplexDistanceMesh.prototype.upload = function() {
     var context = this.scene.context,
         gl = context.gl,
-        i, j,
+        i, j, k,
         base, right, top, point;
 
-    vertex = 6 * (this.length - 1);
+    vertex = 6 * this.edges * this.length;
 
     if (this.shaderLayerOpaque == null) {
         this.shaderLayerOpaque = new core.Shader(
@@ -154,29 +167,31 @@ LineMesh.prototype.upload = function() {
         this.buffers.a_position = new core.Buffer(context, gl.ARRAY_BUFFER, this.data.positions, 2, gl.DYNAMIC_DRAW);
     }
 
-    for (i = 0; i < this.length - 1; ++i) {
-        for (j = 0; j < 6; ++j) {
-            base = 6*i + j;
-            top = j == 2 || j == 4 || j == 5;
-            right = j == 1 || j == 2 || j == 4;
+    for (i = 0; i < this.length; ++i) {
+        for (j = 0; j < this.edges; ++j) {
+            for (k = 0; k < 6; ++k) {
+                base = i * this.edges + 6 * j + k;
+                top = k == 2 || k == 4 || k == 5;
+                right = k == 1 || k == 2 || k == 4;
 
-            point = this.points[right ? i + 1 : i];
-            this.data.vertexes[3 * base + 0] = point[0];
-            this.data.vertexes[3 * base + 1] = point[1];
-            this.data.vertexes[3 * base + 2] = point[2];
+                point = this.points[right ? i * this.edges + j + 1 : i * this.edges];
+                this.data.vertexes[3 * base + 0] = point[0];
+                this.data.vertexes[3 * base + 1] = point[1];
+                this.data.vertexes[3 * base + 2] = point[2];
 
-            this.data.colors[4 * base + 0] = this.color[0];
-            this.data.colors[4 * base + 1] = this.color[1];
-            this.data.colors[4 * base + 2] = this.color[2];
-            this.data.colors[4 * base + 3] = this.color[3];
+                this.data.colors[4 * base + 0] = this.lineColors[j][0];
+                this.data.colors[4 * base + 1] = this.lineColors[j][1];
+                this.data.colors[4 * base + 2] = this.lineColors[j][2];
+                this.data.colors[4 * base + 3] = this.lineColors[j][3];
 
-            this.data.angles[base] = this.angles[i]
-                + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
-            this.data.lengths[base] = this.lengths[i + 1];
-            this.data.offsets[base] = this.offsets[right ? i + 1 : i];
+                this.data.angles[base] = this.angles[i * this.edges + j]
+                    + Math.PI * (top ? 1.0 : -1.0) * (right ? 1.0 : 3.0) / 4;
+                this.data.lengths[base] = this.lengths[i * this.edges + j];
+                this.data.offsets[base] = 0;
 
-            this.data.positions[2 * base + 0] = right ? this.lengths[i + 1] : 0.0;
-            this.data.positions[2 * base + 1] = top ? -this.thickness : this.thickness;
+                this.data.positions[2 * base + 0] = right ? this.lengths[i * this.edges + j] : 0.0;
+                this.data.positions[2 * base + 1] = top ? -this.thickness : this.thickness;
+            }
         }
     }
 
@@ -188,7 +203,7 @@ LineMesh.prototype.upload = function() {
     this.buffers.a_position.upload();
 }
 
-LineMesh.prototype.draw = function(step) {
+SimplexDistanceMesh.prototype.draw = function(step) {
     var gl = this.scene.context.gl,
         shader;
 
@@ -212,10 +227,11 @@ LineMesh.prototype.draw = function(step) {
         u_opaque: 0,
         u_prev: 1,
 
+        u_color: this.color,
         u_thickness: this.thickness,
         u_antialias: this.antialias,
         u_pattern: this.pattern
     }).drawBuffers(this.buffers, null, gl.TRIANGLES);
 }
 
-module.exports = LineMesh;
+module.exports = SimplexDistanceMesh;

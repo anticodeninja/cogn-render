@@ -1,12 +1,12 @@
 precision highp float;
 
 attribute vec3 a_vertex;
+attribute vec4 a_color;
 attribute float a_angle;
 attribute float a_length;
 attribute float a_offset;
 attribute vec2 a_position;
 
-uniform vec4 u_color;
 uniform float u_thickness;
 uniform float u_antialias;
 uniform vec2 u_aspect;
@@ -28,7 +28,7 @@ void main() {
     v_length = a_length;
     v_pos = a_position + vec2((u_thickness + u_antialias) * (a_position.x > 0.0 ? 1.0 : -1.0), u_antialias * sign(a_position.y));
     v_offset = a_offset;
-    v_color = u_color;
+    v_color = a_color;
 
     gl_Position = vec4(screen, vertex.z / u_far, 1.0);
 }

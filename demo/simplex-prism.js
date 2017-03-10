@@ -28,7 +28,7 @@ function init() {
         scene.onMouseDown.remove(mouseDownEvent);
     });
 
-    var simTrans = new utils.SimplexPrismTransformation(150, new utils.LinearTransformation(300, 0, 100));
+    var simTrans = new utils.SimplexPrismTransformation(150, new utils.LinearTransformation(0, 100, -150, 150));
     var fr = new utils.FlatRender();
 
     new primitivies.PointMesh()
@@ -71,7 +71,7 @@ function init() {
     new primitivies.SimplexPrismMesh(simTrans, {"color": "#000000"})
         .setScene(scene);
 
-    fr.distance = simTrans.progressTransformation.toPoint(28);
+    fr.distance = simTrans.progressTransformation.toPoint(78);
     new primitivies.SimplexDistanceMesh(simTrans.simplexTransformation, {colors: colors, flatRender: fr})
         .addPoint([20, 24, 6])
         .setScene(scene);

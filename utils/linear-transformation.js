@@ -1,11 +1,14 @@
-var LinearTransformation = function(size, minValue, maxValue) {
-    this.size = size;
-    this.minValue = minValue;
-    this.maxValue = maxValue;
+var LinearTransformation = function(sourceMin, sourceMax, targetMin, targetMax) {
+    this.sourceMin = sourceMin;
+    this.sourceLength = sourceMax - sourceMin;
+    this.sourceMax = sourceMax;
+    this.targetMin = targetMin;
+    this.targetLength = targetMax - targetMin;
+    this.targetMax = targetMax;
 }
 
 LinearTransformation.prototype.toPoint = function(value) {
-    return this.size * (value - this.minValue) / (this.maxValue - this.minValue);
+    return this.targetMin + this.targetLength * (value - this.sourceMin) / this.sourceLength;
 }
 
 module.exports = LinearTransformation;

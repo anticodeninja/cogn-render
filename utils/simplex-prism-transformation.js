@@ -3,9 +3,6 @@ var utils = require("./main.js");
 var SimplexPrismTransformation = function(size, transformation) {
     this.simplexTransformation = new utils.SimplexTransformation(size);
     this.progressTransformation = transformation;
-    this.length = this.progressTransformation.size;
-    this.minValue = this.progressTransformation.minValue;
-    this.maxValue = this.progressTransformation.maxValue;
 }
 
 SimplexPrismTransformation.prototype.toPoint = function(value) {
@@ -14,7 +11,7 @@ SimplexPrismTransformation.prototype.toPoint = function(value) {
 
     result[0] = temp[0];
     result[1] = temp[1];
-    result[2] = this.progressTransformation.toPoint(value[3]) - this.length / 2.0;
+    result[2] = this.progressTransformation.toPoint(value[3]);
     
     return result;
 }

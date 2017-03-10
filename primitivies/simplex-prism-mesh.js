@@ -4,12 +4,12 @@ var SimplexPrismMesh = function(trans, options) {
     this.constructor.prototype.constructor.call(this, options);
 
     this.points = [
-        trans.toPoint([1, 0, 0, trans.minValue]),
-        trans.toPoint([0, 1, 0, trans.minValue]),
-        trans.toPoint([0, 0, 1, trans.minValue]),
-        trans.toPoint([1, 0, 0, trans.maxValue]),
-        trans.toPoint([0, 1, 0, trans.maxValue]),
-        trans.toPoint([0, 0, 1, trans.maxValue]),
+        trans.toPoint([1, 0, 0, trans.progressTransformation.sourceMin]),
+        trans.toPoint([0, 1, 0, trans.progressTransformation.sourceMin]),
+        trans.toPoint([0, 0, 1, trans.progressTransformation.sourceMin]),
+        trans.toPoint([1, 0, 0, trans.progressTransformation.sourceMax]),
+        trans.toPoint([0, 1, 0, trans.progressTransformation.sourceMax]),
+        trans.toPoint([0, 0, 1, trans.progressTransformation.sourceMax]),
     ];
     
     this.lines = [

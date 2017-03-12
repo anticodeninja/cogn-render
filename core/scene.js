@@ -135,8 +135,8 @@ Scene.prototype.getTrackballPosition = function(out, posX, posY) {
 
     vec3.set(
         out,
-        (posX - 0.5 * this.width) / (0.5 * this.width),
-        (0.5 * this.height - posY) / (0.5 * this.height),
+        2 * posX - 1,
+        1 - 2 * posY,
         0.0);
     length = out[0] * out[0] + out[1] * out[1];
 

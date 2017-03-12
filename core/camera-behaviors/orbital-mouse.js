@@ -29,7 +29,7 @@ OrbitalMouse.prototype.detach = function(scene) {
 }
 
 OrbitalMouse.prototype.mouseMoveHandler = function(e) {
-    this.scene.getTrackballPosition(this.current, e.canvasX, e.canvasY);
+    this.scene.getTrackballPosition(this.current, e.realX, e.realY);
     quat.rotationTo(this.delta, this.current, this.prev);
     vec3.copy(this.prev, this.current);
     
@@ -46,7 +46,7 @@ OrbitalMouse.prototype.mouseDownHandler = function(e) {
     }
 
     this.mouseMoveEvent = this.scene.onMouseMove.add(this.mouseMoveHandler.bind(this));
-    this.scene.getTrackballPosition(this.current, e.canvasX, e.canvasY);
+    this.scene.getTrackballPosition(this.current, e.realX, e.realY);
     vec3.copy(this.prev, this.current);
 }
 

@@ -340,6 +340,8 @@ Context.prototype.__onMouseEvent = function(e) {
     e.mouseY = e.clientY - border.top;
     e.canvasX = e.mouseX;
     e.canvasY = border.height - e.mouseY;
+    e.realX = e.canvasX / border.width;
+    e.realY = e.canvasY / border.height;
 
     if (e.eventType == "mousedown") {
         this.onMouseDown.fire(e);
